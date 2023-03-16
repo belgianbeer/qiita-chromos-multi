@@ -18,6 +18,7 @@ sfdisk -dump /dev/sda
 
 ```
 
+dosfstools を追加
 
 
 ```
