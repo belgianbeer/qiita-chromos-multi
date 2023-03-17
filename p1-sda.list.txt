@@ -4,7 +4,7 @@ Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 Disklabel type: gpt
-Disk identifier: ABFF6D06-0059-D44E-9FA3-B23D4EB13301
+Disk identifier: 9A788614-6CD4-1B46-9F6F-748287F5B228
 
 Device        Start       End   Sectors   Size Type
 /dev/sda1  17010688 500118143 483107456 230.4G Linux filesystem

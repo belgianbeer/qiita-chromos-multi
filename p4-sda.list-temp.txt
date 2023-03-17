@@ -4,7 +4,7 @@ Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 Disklabel type: gpt
-Disk identifier: ABFF6D06-0059-D44E-9FA3-B23D4EB13301
+Disk identifier: 9A788614-6CD4-1B46-9F6F-748287F5B228
 
 Device        Start      End  Sectors  Size Type
 /dev/sda1  17010688 58953727 41943040   20G Linux filesystem
@@ -14,10 +14,10 @@ Device        Start      End  Sectors  Size Type
 /dev/sda5    233472  8622079  8388608    4G ChromeOS root fs
 /dev/sda6        65       65        1  512B ChromeOS kernel
 /dev/sda7        66       66        1  512B ChromeOS root fs
-/dev/sda8     69632   102399    32768   16M Linux filesystem
+/dev/sda8     69632   233471   163840   80M Linux filesystem
 /dev/sda9        67       67        1  512B ChromeOS reserved
 /dev/sda10       68       68        1  512B ChromeOS reserved
 /dev/sda11       64       64        1  512B unknown
-/dev/sda12   102400   233471   131072   64M EFI System
+/dev/sda12 58953728 59478015   524288  256M EFI System
 
 Partition table entries are not in disk order.
