@@ -161,3 +161,27 @@ syslinux/ldlinux.sys
 syslinux/ldlinux.c32
 root@debian:~#
 ```
+
+
+```
+apt update
+apt install efibootmgr
+efibootmgr -v > e2-efibootmgr
+
+sfdisk --dump /dev/sda > p4-sda.dump
+
+cp p3-sda.dump p5-sda.dump
+tail -2 p4-sda.dump > p5-sda.dump
+sfdisk --force /dev/sda < p5-sda.dump
+
+ここで一旦再起動
+
+efibootmgr -B -b 0
+
+efibootmgr -c -L 'Windows Boot Manager' -d /dev/sda -l '\efi\Microsoft\Boot\bootmgfw.efi'
+```
+
+## ↑ 失敗した
+
+## やりなおし
+
