@@ -1,4 +1,4 @@
-# ChromeOS FlexとWindowsまたはmacOS等のマルチブート環境を作る
+# ChromeOS FlexとWindowsやmacOS等のマルチブート環境を作る
 
 ## はじめに
 
@@ -101,8 +101,6 @@ sector-size: 512
 #
 ```
 
-
-
 ```
 # cp p1-sda.dump p2-sda.dump
 # uuidgen
@@ -137,7 +135,6 @@ Device        Start      End  Sectors  Size Type
 /dev/sda13 58953728 59478015   524288  256M Microsoft basic data
 
 Partition table entries are not in disk order.
-
 ```
 
 ファイルシステムを作る
