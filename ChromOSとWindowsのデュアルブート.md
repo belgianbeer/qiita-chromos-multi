@@ -16,18 +16,20 @@ ChromeOS Flexってどうなの？と聞かれることが有りますが、Wind
 
 ## 用意するもの
 
+ChromeOS Flexとのマルチブート環境を作るのに必要なものは次の通りです。
+
 1. UEFIをサポートしたPCまたはMac(Intel CPU)本体
 1. ChromeOS Flexのインストール用USBメモリ
 1. Windows 10か11、またはmacOSのインストール用USBメモリ
 1. Debian Liveを書き込んだUSBメモリ
 1. 記録用のUSBメモリ
 
-PCについてですけど、ChromeOS Flex自体はUEFIをサポートしてなくても動くんじゃないかと思いますが(未確認)、ChromeOS Flexでは16ものパーティションを使用します。そのため他のOSとの同居を考えるとGPT(Guid Partition Table)を使えるUEFI対応のPCが必須となります。Intel CPUのMacはこれらの条件を満たしています。
+UEFIをサポートしていないPCでもChromeOS Flex自体は動くんじゃないかと思いますが(未確認)、ChromeOS Flexでは12ものパーティションを使用します。そのため他のOSとのマルチブートを行うためにGPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacはこれらの条件を満たしています。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")であれば申し分無いですが、よほどでなければChromeOS Flexが堂さすると思います。
 
-マルチブート環境を作るのですから、OSインストール用のUSBメモリがChromeOSとWindowsまたはmacOSのものが必要なのは当然として、本作業を行うためにはDebian LiveのUSBメモリも必要になります。Debianでなくても良いのですがsfdiskなどのLinuxのコマンドが使えるLinuxの起動用USBメモリが必要となります。
+マルチブート環境を作るのですから、OSインストール用のUSBメモリがChromeOS FlexとWindowsまたはmacOSのものが必要なのは当然として、ディスクパーティションの構成を編集するためにDebian LiveのUSBメモリも必要になります(単なるDebianのインストーラは不可)。Debian Liveでなくても良いのですがsfdiskなどのLinuxのコマンドが使えるLinuxの起動用USBメモリが必要となります。
 
 この他に記録用のUSBメモリも必要になります。パーティション構成のテキストフ
-ァイルを保存するだけなので数Kバイトの空があれば十分です。手頃ななものをご利用ください。
+ァイルを2 or 3程度保存するだけなので20Kバイトぐらいの空きがあれば十分です。手頃なものをご利用ください。
 
 ## ChromeOS Flexのインストール
 
