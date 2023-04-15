@@ -34,10 +34,11 @@ UEFIをサポートしていないPCでもChromeOS Flex自体は動くんじゃ�
 
 まずPCを用意してChromeOS Flexをインストールします。ChromOS Flexのインストール用USBメモリで起動してメニューにしたがって操作すればインストールで難しいところは無いでしょう。Googleも[ChromOS Flexインストールガイド](https://support.google.com/chromeosflex/answer/11552529)を用意していて、インストール用のUSBメモリの作り方などもこちらにあります。
 
-通常であればインストール後に起動してアカウント設定等を行うのですが、ここでは必要ありません。設定してもこの後の作業で消去されてしまうので、ChromOS Flexを使えるのは作業が終わってからになります。
+通常であればインストール後に起動してアカウント設定等を行うのですが、ここでは必要ありません。設定してもこの後の作業で消去されてしまい、改めて設定することになります。
 
 ## ChromeOS Flexのパーティション構成
 
+ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUSBメモリで起動します。Debian Li
 
 Debian LiveのUSBメモリで起動する
 
