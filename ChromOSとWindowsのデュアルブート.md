@@ -42,6 +42,8 @@ ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUS
 
 Debian LiveのUSBメモリで起動する
 
+シェルのプロンプトが現れたら`sudo -i`でrootユーザーになります。
+
 
 
 
