@@ -36,18 +36,28 @@ UEFIをサポートしていないPCでもChromeOS Flex自体は動くんじゃ�
 
 通常であればインストール後に起動してアカウント設定等を行うのですが、ここでは必要ありません。設定してもこの後の作業で消去されてしまい、改めて設定することになります。
 
-## ChromeOS Flexのパーティション構成
+
+## Debian Liveでのブート
 
 ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUSBメモリで起動します。Debian Li
 
+### ここ書き足し必要
 Debian LiveのUSBメモリで起動する
 
-シェルのプロンプトが現れたら`sudo -i`でrootユーザーになります。
+起動するとシェルが立ち上がりますが、少し古いバージョンのDebian Liveのイメージを使った場合はログインプロンプトになることがあります。そのときはユーザー名に「user」パスワードに「live」を指定してログインします。
+
+そして、記録用のUSBメモリをPCに接続します。
+
+多くの場合Debian環境下でのデバイスの割り当ては次のようになると思います。
+内蔵ストレージ`/dev/sda`
+Debian LiveのUSBメモリ`/dev/sdb`
+記録用のUSBメモリ`/dev/sdc`
+
+構成によっては違う場合があるかもしれないので、実際のストレージとデバイス名の割り当てを正しく把握してください。以後はこの割り当てを前提に説明します。
+
+`sudo -i`でrootユーザーになります。
 
 
-
-
-## Debian Liveでのブート
 
 ```
 sudo -i 
@@ -56,6 +66,7 @@ apt install dosfstools openssh-server efibootmgr
 systemctl start ssh
 ```
 
+### ChromeOS Flexのパーティション構成
 
 ```
 # sfdisk -l /dev/sda | tee p1-sda.list
