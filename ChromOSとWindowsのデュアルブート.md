@@ -32,30 +32,42 @@ UEFIをサポートしていないPCでもChromeOS Flex自体は動くんじゃ�
 
 ## ChromeOS Flexのインストール
 
-まずPCにChromeOS Flexをインストールします。ChromOS Flexのインストール用USBメモリで起動してメニューにしたがって操作すればインストールで難しいところは無いでしょう。Googleも[ChromOS Flexインストールガイド](https://support.google.com/chromeosflex/answer/11552529)を用意していて、インストール用のUSBメモリの作り方などもこちらにあります。
+最初にChromeOS Flexをインストールするのですが、インストール前にBIOSの設定を確認します。少し古いPCでUEFIに対応したBIOSであってもUEFIが無効になっていることがあるので、必ず確認してください。Macの場合は事前に設定することはありません。
+
+ChromOS Flexのインストールに関しては、USBメモリで起動してメニューにしたがって順に操作するだけなので難しいところは無いでしょう。Googleも[ChromOS Flexインストールガイド](https://support.google.com/chromeosflex/answer/11552529)を用意していて、インストール用のUSBメモリの作り方などもこちらにあります。
 
 通常であればインストール後に起動してアカウント設定等を行うのですが、ここでは必要ありません。設定してもこの後の作業で消去されてしまい、改めて設定することになります。とは言えChromeOS Flexが動作することを確認しておくことは重要なので、ある程度のことは試すのがよいでしょう。
 
-## Debian Liveでのブート
+## Debian Liveの起動
 
-ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUSBメモリで起動します。Debian Li
-
-### ここ書き足し必要
-Debian LiveのUSBメモリで起動する
-
-起動するとシェルが立ち上がりますが、少し古いバージョンのDebian Liveのイメージを使った場合はログインプロンプトになることがあります。そのときはユーザー名に「user」パスワードに「live」を指定してログインします。
+ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUSBメモリで起動します。起動前にLANケーブルを接続してPCがインターネットにアクセスできるようにしておく必要があります。起動するとシェルが立ち上がりますが、少し古いバージョンのDebian Liveのイメージを使った場合はログインプロンプトになることがあります。そのときはユーザー名に「user」パスワードに「live」を指定してログインします。
 
 そして、記録用のUSBメモリをPCに接続します。
 
-多くの場合Debian環境下でのデバイスの割り当ては次のようになると思います。
-内蔵ストレージ`/dev/sda`
-Debian LiveのUSBメモリ`/dev/sdb`
-記録用のUSBメモリ`/dev/sdc`
+多くの場合Debian環境下でのストレージデバイスの割り当ては次のようになると思います。
 
-場合によっては違うことがあるかもしれないので、実際のストレージとデバイス名の割り当てを正しく把握してください。以後はこの割り当てを前提に説明します。
+<table>
+  <caption>ストレージとデバイス名の対応</caption>
+  <thead>
+    <tr>
+      <th>ストレージの種類</th> <th>デバイス名</th>
+    </tr>
+  </thead>
+  <tr>
+    <td> 内蔵ストレージ </td> <td>/dev/sda</td>
+  </tr>
+  <tr>
+    <td> Debian LiveのUSBメモリ</td> <td>/dev/sdb</td>
+  </tr>
+  <tr>
+    <td> 記録用のUSBメモリ</td> <td>/dev/sdc</td>
+  </tr>
+</table>
+
+ストレージの構成によっては違う割り当てになることがあるかもしれないので、実際のストレージとデバイス名の割り当てを正しく把握してください。以後はこの割り当てを前提に説明します。
 
 `sudo -i`でrootユーザーになります。
-
+### sudo -i のコマンドの絵
 
 
 ```
@@ -65,7 +77,7 @@ apt install dosfstools openssh-server efibootmgr
 systemctl start ssh
 ```
 
-### ChromeOS Flexのパーティション構成
+### ChromeOS Flexのパーティション構成とバックアップ
 
 ```
 # sfdisk -l /dev/sda | tee p1-sda.list
@@ -185,7 +197,7 @@ mkfs.fat 4.2 (2021-01-31)
 # mount /dev/sda13 /mnt/dos
 ```
 
-## EFIの内容をコピーする
+## ESPの内容をコピーする
 ```
 # (cd /mnt/efi ; tar cf - * ) | (cd /mnt/dos ; tar xvf -)
 efi/
