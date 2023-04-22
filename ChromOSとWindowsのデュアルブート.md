@@ -19,16 +19,18 @@ ChromeOS Flexってどうなの？と聞かれることが有りますが、Wind
 ChromeOS Flexとのマルチブート環境を作るのに必要なものは次の通りです。
 
 1. UEFIをサポートしたPCまたはMac(Intel CPU)本体
-1. ChromeOS Flexのインストール用USBメモリ
-1. Windows 10か11、またはmacOSのインストール用USBメモリ
-1. Debian Liveを書き込んだUSBメモリ
-1. 記録用のUSBメモリ
+1. ChromeOS Flexのインストール用USBメモリ(8GB以上)
+1. Windows 10か11、またはmacOSのインストール用USBメモリ(Windowsであれば8GB以上、macOSでは16GB以上)
+1. Debian Liveを書き込んだUSBメモリ(2GB以上)
+1. 記録用のUSBメモリ(100KB以上の空きがあるもの)
 
-UEFIをサポートしていないPCでもChromeOS Flex自体は動くんじゃないかと思いますが(未確認)、他のOSとのマルチブートを行うためにGPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacであれば条件を満たしています。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当してなくても、よほどでなければChromeOS Flexが動作すると思います。
+UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、他OSとのブートの切り替えにUEFIに用意されているブートセレクタを使うため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacであれば条件を満たしています。
+
+### [ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当してなくても、よほどでなければChromeOS Flexが動作すると思います。
 
 マルチブート環境を作るのですから、OSインストール用のUSBメモリがChromeOS FlexとWindowsまたはmacOSのものが必要なのは当然として、ディスクパーティションの構成を編集するためにDebian LiveのUSBメモリも必要になります。Debian Liveでなくても良いのですがシェルが起動できてsfdiskとエディタ等が利用できるLinuxの起動用USBメモリが条件となります。
 
-この他に記録用のUSBメモリも必要になります。Debian LiveのUSBメモリに記録できれば済むのですが、Debian Liveではファイルシステムの肝心な部分はRead Onlyでマウントされているため書き込むことができません。パーティション構成のテキストファイルを数個保存するだけなので、手頃なものを用意してください。
+この他に記録用のUSBメモリも必要になります。Debian LiveのUSBメモリに記録できれば済むのですが、Debian Liveではファイルシステムの肝心な部分はRead Onlyでマウントされているため書き込むことができません。パーティション構成のテキストファイルを数個保存するだけなので100Kバイトもあれば間に合います。手頃なものを用意してください。
 
 ## ChromeOS Flexのインストール
 
@@ -64,33 +66,50 @@ ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUS
   </tr>
 </table>
 
-ストレージの構成によっては違う割り当てになることがあるかもしれないので、実際のストレージとデバイス名の割り当てを正しく把握してください。以後はこの割り当てを前提に説明します。
+ストレージの構成によっては違う割り当てになることもあるので、実際のストレージとデバイス名の割り当てを正しく把握してください。以後はこの割り当てを前提に説明します。
+
+### Debianでの事前準備
 
 `sudo -i`でrootユーザーになります。
-### sudo -i のコマンドの絵
-
 
 ```
-sudo -i 
-apt update
-apt install dosfstools openssh-server efibootmgr 
-systemctl start ssh
+user@debian$ sudo -i
+root@debian# 
 ```
 
-### ChromeOS Flexのパーティション構成とバックアップ
+dosfstoolsをインストールします。(uuidは必要？)
 
 ```
-# sfdisk -l /dev/sda | tee p1-sda.list
-Disk /dev/sda: 238.47 GiB, 256060514304 bytes, 500118192 sectors
-Disk model: PALIT PSP256 SSD
+root@debian# apt update
+root@debian# apt install dosfstools openssh-server efibootmgr
+root@debian# systemctl start ssh
+root@debian# 
+```
+
+記録用のUSBディスクをマウントして、マウントポイントにcdします。これによって記録が残せるようになります。
+
+```
+root@debian# mount /dev/sdc1 /mnt
+root@debian# cd /mnt
+root@debian# 
+```
+
+### ChromeOS Flexの不思議なパーティション構成とバックアップ
+
+最初にChromeOS Flexのパーティション構成を確認します。ここでは`sfdisk --list`を使います。
+
+```
+root@debian# sfdisk --list /dev/sda
+Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
+Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 Disklabel type: gpt
-Disk identifier: 9A788614-6CD4-1B46-9F6F-748287F5B228
+Disk identifier: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 
 Device        Start       End   Sectors   Size Type
-/dev/sda1  17010688 500118143 483107456 230.4G Linux filesystem
+/dev/sda1  17010688 234441599 217430912 103.7G Linux filesystem
 /dev/sda2        69     32836     32768    16M ChromeOS kernel
 /dev/sda3   8622080  17010687   8388608     4G ChromeOS root fs
 /dev/sda4     32837     65604     32768    16M ChromeOS kernel
@@ -104,52 +123,65 @@ Device        Start       End   Sectors   Size Type
 /dev/sda12   102400    233471    131072    64M EFI System
 
 Partition table entries are not in disk order.
-#
+root@debian#
+```
 
-# sfdisk --dump /dev/sda | tee /tmp/p1-sda.dump
+知ってる人が見ると違和感を覚えると思いますが、ChromeOS Flexではパーティションのインデックスと物理的な順番が一致していません。たとえばsda1のスタートセクタは170010688で、sda2の69より大きくなっています。通常ディスクにパーティションを作成する場合ディスクの先頭から順に割り当てるので、パーティションインデックとスタートセクタの値はどちらも小さいものから順に並びます。ところがChromeOS Flexではなぜかこのようにバラバラの順番でパーティションが並んでいます。おかげで`Partition table entries are not in disk order.`というメッセージまで表示されています。
+
+このパーティション構成のバックアップを`sfdisk --dump`を使って保存します。ここでは`p1-sda-dump`というファイルに保存しています。
+
+```
+root@debian# sfdisk --dump /dev/sda | tee p1-sda-dump
 label: gpt
-label-id: 9A788614-6CD4-1B46-9F6F-748287F5B228
+label-id: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 device: /dev/sda
 unit: sectors
 first-lba: 34
-last-lba: 500118158
+last-lba: 234441614
 sector-size: 512
 
-/dev/sda1 : start=    17010688, size=   483107456, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=26FE530D-CCE5-2A4D-B5AA-248FA77B01C9, name="STATE"
-/dev/sda2 : start=          69, size=       32768, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=C5F52E17-1AA7-2144-BFC4-3E957668C4C5, name="KERN-A", attrs="GUID:48,53,54,56"
-/dev/sda3 : start=     8622080, size=     8388608, type=3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC, uuid=1604F89D-9533-8F45-A25F-95F18C69E3B9, name="ROOT-A"
-/dev/sda4 : start=       32837, size=       32768, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=9E34E184-4D12-C142-82A9-BA998B2A5968, name="KERN-B", attrs="GUID:52,53,54,55"
-/dev/sda5 : start=      233472, size=     8388608, type=3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC, uuid=4EB5B9D5-B4C0-254D-AC32-075D6E4BC90B, name="ROOT-B"
-/dev/sda6 : start=          65, size=           1, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=D66DA0CC-AB74-1E47-96DE-F1F172456FE8, name="KERN-C", attrs="GUID:52,53,54,55"
-/dev/sda7 : start=          66, size=           1, type=3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC, uuid=7B71E8C3-19C8-7B46-B3BA-D3BBD7F63FA7, name="ROOT-C"
-/dev/sda8 : start=       69632, size=       32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=6A967904-870F-6647-A84D-9E0007F5C761, name="OEM"
-/dev/sda9 : start=          67, size=           1, type=2E0A753D-9E48-43B0-8337-B15192CB1B5E, uuid=D0C724DD-A6C5-C74B-B887-B4A39E47987B, name="reserved"
-/dev/sda10 : start=          68, size=           1, type=2E0A753D-9E48-43B0-8337-B15192CB1B5E, uuid=31F964AE-87D4-7345-9609-94FA965B9C7C, name="reserved"
-/dev/sda11 : start=          64, size=           1, type=CAB6E88E-ABF3-4102-A07A-D4BB9BE3C1D3, uuid=A0DAB71B-CC02-FB41-867C-FD4372385941, name="RWFW"
-/dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=72511358-8D4A-7B41-A256-57CFE6E97258, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
-#
+/dev/sda1 : start=    17010688, size=   217430912, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=08FD7E32-17D4-7341-934F-06FE44B1237F, name="STATE"
+/dev/sda2 : start=          69, size=       32768, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=A8FC6629-5055-A040-A9A5-415A8EA50C1B, name="KERN-A", attrs="GUID:48,56"
+/dev/sda3 : start=     8622080, size=     8388608, type=3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC, uuid=358D4F01-CDE0-5D4C-BB65-E91160A04FE2, name="ROOT-A"
+/dev/sda4 : start=       32837, size=       32768, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=9F96728D-96A8-6745-892D-91084EAF2481, name="KERN-B", attrs="GUID:49,56"
+/dev/sda5 : start=      233472, size=     8388608, type=3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC, uuid=1030FFBB-8B4C-5049-9B22-20878DC32FE7, name="ROOT-B"
+/dev/sda6 : start=          65, size=           1, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=3AB9CA80-136D-1641-B222-3C0BBEC2B66D, name="KERN-C", attrs="GUID:52,53,54,55"
+/dev/sda7 : start=          66, size=           1, type=3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC, uuid=170F4F46-6D5F-ED48-82EB-39FEEE521751, name="ROOT-C"
+/dev/sda8 : start=       69632, size=       32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=9E8B7A51-B372-5B44-B4D4-EB4ABE5F77CF, name="OEM"
+/dev/sda9 : start=          67, size=           1, type=2E0A753D-9E48-43B0-8337-B15192CB1B5E, uuid=32CF3879-ABD4-B74D-A864-7E734A2DB89E, name="reserved"
+/dev/sda10 : start=          68, size=           1, type=2E0A753D-9E48-43B0-8337-B15192CB1B5E, uuid=7433F1DE-C8AF-7D42-8A58-996671E0753D, name="reserved"
+/dev/sda11 : start=          64, size=           1, type=CAB6E88E-ABF3-4102-A07A-D4BB9BE3C1D3, uuid=C147F3D7-07F4-0048-97B5-B4DAC1DF7120, name="RWFW"
+/dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
+root@debian# 
 ```
 
 ```
-# cp p1-sda.dump p2-sda.dump
-# uuidgen
+root@debian# uuidgen
 8C678F1E-729F-484B-8368-92DF1332E62A
-# vi p2-sda.dump
+root@debian# cp p1-sda.dump p2-sda.dump
+root@debian# vi p2-sda.dump
+.....(省略).....
+root@debian#
+```
 
+```
+root@debian# sfdisk /dev/sda < p2-sda.dump
+.....(省略).....
+root@debian# 
+```
 
-# sfdisk /dev/sda < p2-sda.dump
-
-# sfdisk -l /dev/sda
-Disk /dev/sda: 238.47 GiB, 256060514304 bytes, 500118192 sectors
-Disk model: PALIT PSP256 SSD
+```
+root@debian# sfdisk --list /dev/sda
+Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
+Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 Disklabel type: gpt
-Disk identifier: 9A788614-6CD4-1B46-9F6F-748287F5B228
+Disk identifier: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 
 Device        Start      End  Sectors  Size Type
-/dev/sda1  17010688 58953727 41943040   20G Linux filesystem
+/dev/sda1  17010688 50565119 33554432   16G Linux filesystem
 /dev/sda2        69    32836    32768   16M ChromeOS kernel
 /dev/sda3   8622080 17010687  8388608    4G ChromeOS root fs
 /dev/sda4     32837    65604    32768   16M ChromeOS kernel
@@ -161,9 +193,10 @@ Device        Start      End  Sectors  Size Type
 /dev/sda10       68       68        1  512B ChromeOS reserved
 /dev/sda11       64       64        1  512B unknown
 /dev/sda12   102400   233471   131072   64M EFI System
-/dev/sda13 58953728 59478015   524288  256M Microsoft basic data
+/dev/sda13 50565120 51089407   524288  256M Microsoft basic data
 
 Partition table entries are not in disk order.
+root@debian# 
 ```
 
 ファイルシステムを作る
