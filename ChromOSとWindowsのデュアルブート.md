@@ -94,7 +94,7 @@ root@debian# cd /mnt
 root@debian# 
 ```
 
-### ChromeOS Flexの不思議なパーティション構成とバックアップ
+### ChromeOS Flexの不思議なパーティション構成
 
 最初にChromeOS Flexのパーティション構成を確認します。ここでは`sfdisk --list`を使います。
 
@@ -126,9 +126,11 @@ Partition table entries are not in disk order.
 root@debian#
 ```
 
-知ってる人が見ると違和感を覚えると思いますが、ChromeOS Flexではパーティションのインデックスと物理的な順番が一致していません。たとえばsda1のスタートセクタは170010688で、sda2の69より大きくなっています。通常ディスクにパーティションを作成する場合ディスクの先頭から順に割り当てるので、パーティションインデックとスタートセクタの値はどちらも小さいものから順に並びます。ところがChromeOS Flexではなぜかこのようにバラバラの順番でパーティションが並んでいます。おかげで`Partition table entries are not in disk order.`というメッセージまで表示されています。
+パーティション構成を見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションのインデックスとディスクの物理的な順番が一致していません。たとえばsda1のスタートセクタは170010688で、次のsda2の69より大きくなっています。通常ディスクにパーティションを作成する場合ディスクの先頭から順に割り当てるので、パーティションインデックとスタートセクタの値はどちらも小さいものから順に並びます。ところがChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。おかげで`Partition table entries are not in disk order.`というメッセージまで表示されています。
 
-このパーティション構成のバックアップを`sfdisk --dump`を使って保存します。ここでは`p1-sda-dump`というファイルに保存しています。
+### ChromOS Flexのディスクパーティション構成のバックアップ
+
+ディスクパーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールした後に問題となります。そこでChromeOS Flexインストール直後のパーティション構成のバックアップを保存しておき、後で使います。バックアップには`sfdisk --dump`を使い、ここでは`p1-sda-dump`というファイルに保存しています。
 
 ```
 root@debian# sfdisk --dump /dev/sda | tee p1-sda-dump
@@ -154,6 +156,10 @@ sector-size: 512
 /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 root@debian# 
 ```
+
+### EFIシステムパーティションの拡張
+
+
 
 ```
 root@debian# uuidgen
