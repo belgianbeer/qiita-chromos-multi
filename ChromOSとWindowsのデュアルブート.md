@@ -24,7 +24,7 @@ ChromeOS Flexとのマルチブート環境を作るのに必要なものは次�
 1. Debian Liveを書き込んだUSBメモリ(2GB以上)
 1. 記録用のUSBメモリ(100KB以上の空きがあるもの)
 
-UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、他OSとのブートの切り替えにUEFIに用意されているブートセレクタを使うため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacであれば条件を満たしています。
+UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、他OSとのブートの切り替えにUEFIに用意されているブートセレクタを使うため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。PCがIntel CPUのMacであれば条件を満たしています。
 
 ### [ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当してなくても、よほどでなければChromeOS Flexが動作すると思います。
 
@@ -73,25 +73,24 @@ ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUS
 `sudo -i`でrootユーザーになります。
 
 ```
-user@debian$ sudo -i
-root@debian# 
+user@debian:~$ sudo -i
+root@debian:~# 
 ```
 
-dosfstoolsをインストールします。(uuidは必要？)
+aptを使ってdosfstoolsをインストールします。
 
 ```
-root@debian# apt update
-root@debian# apt install dosfstools openssh-server efibootmgr
-root@debian# systemctl start ssh
-root@debian# 
+root@debian:~# apt update
+root@debian:~# apt install dosfstools
+root@debian:~# 
 ```
 
-記録用のUSBディスクをマウントして、マウントポイントにcdします。これによって記録が残せるようになります。
+記録用のUSBメモリをマウントして、マウントポイントにcdします。これでUSBメモリに記録が残せるようになります。
 
 ```
-root@debian# mount /dev/sdc1 /mnt
-root@debian# cd /mnt
-root@debian# 
+root@debian:~# mount /dev/sdc1 /mnt
+root@debian:~# cd /mnt
+root@debian:/mnt# 
 ```
 
 ### ChromeOS Flexの不思議なパーティション構成
@@ -99,7 +98,7 @@ root@debian#
 最初にChromeOS Flexのパーティション構成を確認します。ここでは`sfdisk --list`を使います。
 
 ```
-root@debian# sfdisk --list /dev/sda
+root@debian:/mnt# sfdisk --list /dev/sda
 Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
 Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
@@ -123,7 +122,7 @@ Device        Start       End   Sectors   Size Type
 /dev/sda12   102400    233471    131072    64M EFI System
 
 Partition table entries are not in disk order.
-root@debian#
+root@debian:/mnt#
 ```
 
 パーティション構成を見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションのインデックスとディスクの物理的な順番が一致していません。たとえばsda1のスタートセクタは170010688で、次のsda2の69より大きくなっています。通常ディスクにパーティションを作成する場合ディスクの先頭から順に割り当てるので、パーティションインデックとスタートセクタの値はどちらも小さいものから順に並びます。ところがChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。おかげで`Partition table entries are not in disk order.`というメッセージまで表示されています。
@@ -133,7 +132,7 @@ root@debian#
 ディスクパーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールした後に問題となります。そこでChromeOS Flexインストール直後のパーティション構成のバックアップを保存しておき、後で使います。バックアップには`sfdisk --dump`を使い、ここでは`p1-sda-dump`というファイルに保存しています。
 
 ```
-root@debian# sfdisk --dump /dev/sda | tee p1-sda-dump
+root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda-dump
 label: gpt
 label-id: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 device: /dev/sda
@@ -154,30 +153,58 @@ sector-size: 512
 /dev/sda10 : start=          68, size=           1, type=2E0A753D-9E48-43B0-8337-B15192CB1B5E, uuid=7433F1DE-C8AF-7D42-8A58-996671E0753D, name="reserved"
 /dev/sda11 : start=          64, size=           1, type=CAB6E88E-ABF3-4102-A07A-D4BB9BE3C1D3, uuid=C147F3D7-07F4-0048-97B5-B4DAC1DF7120, name="RWFW"
 /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
-root@debian# 
+root@debian:/mnt# 
 ```
 
-### EFIシステムパーティションの拡張
+### WindowsやmacOS用の空き領域の確保
+
+次のリストは最初に確認した`sfdisk --list /dev/sda`のパーティション構成を、Startの順番つまり物理的順番に並び変え、説明しやすいようにIDにパーティションの順番を追加してあります。
+
+```
+ID : Device        Start       End   Sectors   Size Type
+ 1 : /dev/sda6        65        65         1   512B ChromeOS kernel
+ 2 : /dev/sda7        66        66         1   512B ChromeOS root fs
+ 3 : /dev/sda9        67        67         1   512B ChromeOS reserved
+ 4 : /dev/sda2        69     32836     32768    16M ChromeOS kernel
+ 5 : /dev/sda11       64        64         1   512B unknown
+ 6 : /dev/sda10       68        68         1   512B ChromeOS reserved
+ 7 : /dev/sda4     32837     65604     32768    16M ChromeOS kernel
+ 8 : /dev/sda8     69632    102399     32768    16M Linux filesystem
+ 9 : /dev/sda12   102400    233471    131072    64M EFI System
+10 : /dev/sda5    233472   8622079   8388608     4G ChromeOS root fs
+11 : /dev/sda3   8622080  17010687   8388608     4G ChromeOS root fs
+12 : /dev/sda1  17010688 234441599 217430912 103.7G Linux filesystem
+```
+
+現状ではディスクの全領域がChromeOS Flexに割り当てられているので、このままでは他のOSをインストールするための空き領域がありません。そこで注目するのが12番目にあるLinux filesystemのパーティションで、物理的には最後ですが論理的には`/dev/sda1`が示すように最初に割り当てられています。このパーティションがChromeOS Flexのユーザーデータ用の領域です。
+
+**実はユーザーデータ用の領域のファイルシステムはEXT4で、サイズを変更してEXT4を作り直しても問題なくChoromOS Flexは立ち上がります。つまりこの領域を縮小することで他のOS用のスペースを確保します。**これが最初に書いた裏技ということになります。もちろんEXT4を縮小して作り直すと書き込み済みのデータを失いますが、この時点では使い込んでいるわけでは無いので問題ないわけです。
+
+
+### EFIシステムパーティションの修正
+
+ここで注目するのは9番目にあるEFIシステムパーティション(ESP)で、UEFIではESPにOSのブートコードが書き込まれるます。ChromOS Flexでは、ESPは64Mバイト割り当てられていて、9番目なのにデバイス名の`/dev/sda12`が示すように論理的には12番目ということになり、この中では論理的には一番最後ということになります。
+物理的には9番目のパーティションということになります。
 
 
 
 ```
-root@debian# uuidgen
+root@debian:/mnt# uuidgen
 8C678F1E-729F-484B-8368-92DF1332E62A
-root@debian# cp p1-sda.dump p2-sda.dump
-root@debian# vi p2-sda.dump
+root@debian:/mnt# cp p1-sda.dump p2-sda.dump
+root@debian:/mnt# vi p2-sda.dump
 .....(省略).....
-root@debian#
+root@debian:/mnt#
 ```
 
 ```
-root@debian# sfdisk /dev/sda < p2-sda.dump
+root@debian:/mnt# sfdisk /dev/sda < p2-sda.dump
 .....(省略).....
-root@debian# 
+root@debian:/mnt# 
 ```
 
 ```
-root@debian# sfdisk --list /dev/sda
+root@debian:/mnt# sfdisk --list /dev/sda
 Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
 Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
@@ -202,7 +229,7 @@ Device        Start      End  Sectors  Size Type
 /dev/sda13 50565120 51089407   524288  256M Microsoft basic data
 
 Partition table entries are not in disk order.
-root@debian# 
+root@debian:/mnt# 
 ```
 
 ファイルシステムを作る
