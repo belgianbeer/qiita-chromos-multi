@@ -178,7 +178,7 @@ ID : Device        Start       End   Sectors   Size Type
 
 現状ではディスクの全領域がChromeOS Flexに割り当てられているので、このままでは他のOSをインストールするための空き領域がありません。そこで肝心なのが12番目にあるLinux filesystemのパーティションです。このパーティションはChromeOS Flexでのユーザーデータ用に割り当てられていてで、物理的には最後ですが論理的には`/dev/sda1`が示すように最初に割り当てられています。
 
-**実はユーザーデータ用のパーティションのファイルシステムはEXT4で、サイズを変更してEXT4を作り直しても問題なくChoromOS Flexが立ち上がることを確認しています。そこでこの領域を縮小することで他のOS用のスペースを確保します。** もちろんEXT4を縮小して作り直すと書き込み済みのデータを失いますが、この時点では保存しなければならないようなデータは無いので問題ないわけです。これが最初に書いた裏技ということになります。
+**実はユーザーデータ用のパーティションのファイルシステムはEXT4で、サイズを変更してEXT4を作り直しても問題なくChoromOS Flexが立ち上がることを確認しています。そこでこの領域を縮小することで他のOS用のスペースを確保します**。もちろんEXT4を縮小して作り直すと書き込み済みのデータを失いますが、この時点では保存しなければならないようなデータは無いので問題ないわけです。これが最初に書いた裏技ということになります。
 
 ### EFIシステムパーティションの変更
 
@@ -244,8 +244,8 @@ mke2fs 1.46.2 (28-Feb-2021)
         last mounted on /mnt/stateful_partition on Fri Mar 17 04:05:56 2023
 Proceed anyway? (y,N) y
 Discarding device blocks: done
-Creating filesystem with 5242880 4k blocks and 1310720 inodes
-Filesystem UUID: cf0c6b34-d9d8-437e-8f4e-c1b2c939afc8
+Creating filesystem with 4194304 4k blocks and 1048576 inodes
+Filesystem UUID: 5e407efa-1a3a-41f7-9d04-b036bb893ff6
 Superblock backups stored on blocks:
         32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
         4096000
