@@ -155,6 +155,7 @@ sector-size: 512
 /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 root@debian:/mnt# 
 ```
+リストを見ると、GPTでの各エントリーはスタートLBA、サイズ(実際はそのパーティションの最後のLBA)、パーティションのタイプを示すUUID、固有のUUID、名前、アトリビュートからなっていることがわかります。
 
 ### WindowsやmacOS用の空き領域の確保
 
