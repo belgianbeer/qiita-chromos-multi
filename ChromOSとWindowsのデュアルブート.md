@@ -95,7 +95,7 @@ root@debian:/mnt#
 
 ### ChromeOS Flexの不思議なパーティション構成
 
-最初にChromeOS Flexのパーティション構成を確認します。ここでは`sfdisk --list`を使います。
+最初にChromeOS Flexのパーティション構成を確認します。ここでは`sfdisk --list`を使います。なお、この記事で使っているPCの内蔵ストレージは120GBのSSDです。
 
 ```
 root@debian:/mnt# sfdisk --list /dev/sda
@@ -125,7 +125,7 @@ Partition table entries are not in disk order.
 root@debian:/mnt#
 ```
 
-パーティション構成を見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexでは12ものパーティションがあり、更にパーティションの論理的順番と物理的順番が一致していません。たとえばsda1のスタートセクタは170010688ですが、次のsda2の69より大きくなっています。通常ディスクにパーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`で見ればスタートセクタの値は小さいものから順に並びます。ところがどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。おかげで`Partition table entries are not in disk order.`というメッセージまで表示されています。
+パーティション構成を見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexでは12ものパーティションがあり、更にパーティションの論理的順番と物理的順番が一致していません。たとえばsda1のスタートセクタは170010688ですが、次のsda2の69より大きくなっています。通常ディスクにパーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`で見ればスタートセクタの値は小さいものから順に並びます。ところがどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
 
 ### ChromOS Flexのディスクパーティション構成のバックアップ
 
@@ -190,12 +190,42 @@ ID : Device        Start       End   Sectors   Size Type
 
 そこで、ESPをCheromOS Flexのパーティションの一番最後に移動します。論理的順番はすでに12で一番最後となっていますから、物理的にも12番目になるよう変更するわけです。移動させるといってもパーティションですから、一旦容量の大きなESP用パーティションを作成し、元のESPの内容をコピーしたのち削除します。
 
-## パーティションテーブルの編集
+## パーティションテーブルの編集 その1
 
-最初のパーティションテーブルの編集は、
-ユーザーデータ用パーティションを縮小し、その直後に
+最初のパーティションテーブルの編集は、ChromeOS Flexのユーザーデータ用パーティションを縮小し、それによって空いた領域の先頭部分にESPを置き換えるためのFAT用のパーティションを作成します。
 
-まず最初に保存したp1-sda.dumpを別のファイルにコピーし、編集して13番目にESP用のDOSパーティションを追加します(ESPのファイルシステムはFAT16やFAT32)。この時パーティション用のUUIDが必要になるため、uuidコマンドで生成します。
+まず、先ほど保存したp1-sda.dumpを別のファイルにコピーします。そしてFAT用パーティションを作るためにuuidを1個作成します。
+
+```
+root@debian:/mnt# cp p1-sda.dump p2-sda.dump
+root@debian:/mnt# uuid
+f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0
+```
+
+次にテキストエディタを使って、コピーしたp2-sda.dumpを編集します。元のp1-sda.dumpと編集後のp2-sda.dumpのdiffは次のようになります。
+
+```
+root@debian:/mnt# vi p2-sda.dump
+.....(省略).....
+root@debian:/mnt# diff -u p1-sda.dump p2-sda.dump
+--- p1-sda-dump 2023-04-08 22:51:03.041333000 +0900
++++ p2-sda-dump 2023-04-08 22:51:03.042949000 +0900
+@@ -8,3 +8,3 @@
+
+-/dev/sda1 : start=    17010688, size=   217430912, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=08FD7E32-17D4-7341-934F-06FE44B1237F, name="STATE"
++/dev/sda1 : start=    17010688, size=    33554432, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=08FD7E32-17D4-7341-934F-06FE44B1237F, name="STATE"
+ /dev/sda2 : start=          69, size=       32768, type=FE3A2A5D-4F32-41A7-B725-ACCC3285A309, uuid=A8FC6629-5055-A040-A9A5-415A8EA50C1B, name="KERN-A", attrs="GUID:48,56"
+@@ -20 +20,2 @@
+ /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
++/dev/sda13 : start=    50565120, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0, name="DOS"
+root@debian:/mnt# 
+```
+
+/dev/sda1の変更は、単純にサイズを小さくするだけです。元は217430912ブロック(1ブロックは512バイト)なので100GB以上あるので、16GBに変更するため33554432に設定しています。なおsizeの数字はかならず8の倍数に設定します。これは今時のストレージのセクタサイズが4Kバイトであるため、8の倍数で合わせています。あっていないとパフォーマンス面でペナルティが発生するためです。
+、編集して13番目にESP用のDOSパーティションを追加します(ESPのファイルシステムはFAT16やFAT32)。この時パーティション用のUUIDが必要になるため、uuidコマンドで生成します。
+
+# uuidコマンド？
+
 ```
 root@debian:/mnt# cp p1-sda.dump p2-sda.dump
 root@debian:/mnt# uuid
@@ -204,7 +234,7 @@ root@debian:/mnt# vi p2-sda.dump
 .....(省略).....
 root@debian:/mnt# 
 ```
-
+変更点は次の通り
 
 ```
 root@debian:/mnt# uuidgen
