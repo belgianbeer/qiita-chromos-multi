@@ -95,7 +95,7 @@ root@debian:/mnt#
 
 ### ChromeOS Flexの不思議なパーティション構成
 
-最初にChromeOS Flexのパーティション構成を確認します。ここでは`sfdisk --list`を使います。なお、この記事で使っているPCの内蔵ストレージは120GBのSSDです。
+最初に`sfdisk --list`を使って、ChromeOS Flexのパーティション構成を確認します。なお、この記事で使っているPCの内蔵ストレージは120GBのSSDです。
 
 ```
 root@debian:/mnt# sfdisk --list /dev/sda
@@ -129,10 +129,10 @@ root@debian:/mnt#
 
 ### ChromOS Flexのディスクパーティション構成のバックアップ
 
-ディスクパーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールした後に問題となります。そこで、後で利用できるようChromeOS Flexインストール直後のパーティション構成を保存します。ここでは`sfdisk --dump`でパーティションの構成を`p1-sda-dump`というファイルに保存しています。
+ディスクパーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールした後に問題になります。そのため後で利用できるようChromeOS Flexインストール直後のパーティション構成を保存します。ここでは`sfdisk --dump`でパーティションの構成を`p1-sda-dump`というファイルに保存しています。
 
 ```
-root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda-dump
+root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda.dump
 label: gpt
 label-id: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 device: /dev/sda
@@ -155,7 +155,7 @@ sector-size: 512
 /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 root@debian:/mnt# 
 ```
-リストを見ると、GPTでの各エントリーはスタートLBA、サイズ(実際はそのパーティションの最後のLBA)、パーティションのタイプを示すUUID、固有のUUID、名前、アトリビュートからなっていることがわかります。
+リストを見ると、GPTでの各エントリーは先頭のLBA、サイズ(GPTで記録されるのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、各パーティション固有のUUID、パーティションの名前、アトリビュートからなっていることがわかります。
 
 ### WindowsやmacOS用の空き領域の確保
 
@@ -177,23 +177,23 @@ ID : Device        Start       End   Sectors   Size Type
 12 : /dev/sda1  17010688 234441599 217430912 103.7G Linux filesystem
 ```
 
-現状ではディスクの全領域がChromeOS Flexに割り当てられているので、このままでは他のOSをインストールするための空き領域がありません。そこで肝心なのが12番目にあるLinux filesystemのパーティションです。このパーティションはChromeOS Flexでのユーザーデータ用に割り当てられていてで、物理的には最後ですが論理的には`/dev/sda1`が示すように最初に割り当てられています。
+現状ではディスクの全領域がChromeOS Flexに割り当てられているので、このままでは他のOSをインストールするための空き領域がありません。そこでポイントとなるのが12番目にあるLinux filesystemのパーティションです。このパーティションはChromeOS Flexでのユーザーデータ用に割り当てられていてで、物理的には最後ですが論理的には`/dev/sda1`が示すように最初に割り当てられています。
 
-**実はユーザーデータ用のパーティションのファイルシステムはEXT4で、サイズを変更してEXT4を作り直しても問題なくChoromOS Flexが立ち上がることを確認しています。そこでこの領域を縮小することで他のOS用のスペースを確保します**。もちろんEXT4を縮小して作り直すと書き込み済みのデータを失いますが、この時点では保存しなければならないようなデータは無いので問題ないわけです。これが最初に書いた裏技ということになります。
+実は**ユーザーデータ用のパーティションのファイルシステムはEXT4で、サイズを変更してEXT4を作り直しても問題なくChoromOS Flexが立ち上がることを確認しています。そこでこの領域を縮小することで他のOS用のスペースを確保します**。もちろんEXT4を縮小して作り直すと書き込み済みのデータを失いますが、この時点では保存しなければならないようなデータは無いので問題ないわけです。これが最初に書いた裏技ということになります。
 
 ### EFIシステムパーティションの変更
 
-次に注目するのが9番目にあるEFIシステムパーティション(ESP)で、UEFIではESPにOSのブートローダーやカーネルなどが保存されます。ChromOS FlexではESPに64Mバイト割り当てられていて、9番目なのにデバイス名の`/dev/sda12`が示すように論理的には12番目で一番最後になります。
+次にポイントとなるのが9番目にあるEFIシステムパーティション(ESP)で、UEFIではESPにOSのブートローダーやカーネルなどが保存されます。ChromOS FlexではESPに64Mバイト割り当てられていて、9番目なのにデバイス名の`/dev/sda12`が示すように論理的には12番目で一番最後になります。
 
-いろいろテストした結果ChromeOS FlexのESPの設定には二つの問題がありました。一つ目がその容量で、64MBだとChromeOS Flexだけなら問題ないのでしょうが、Windowsとのマルチブートを行おうとすると残容量が不足気味です。実際Windowsのブートローダーと必要なファイルを加えてみたら残りは2.7MB程度になりました。もし今後OSのアップデート等によってESPに保存するファイルが増えたり何かのファイルサイズが大きくなったりすると容量不足に陥ることが容易に予測できます。ですから今後のためにもっと容量を増やす必要があります。
+いろいろテストした結果ChromeOS FlexのESPの設定には二つの問題がありました。一つ目が64MBの容量で、ChromeOS Flexだけなら問題ないのでしょうがWindowsとのマルチブートを行おうとすると残容量が不足気味です。実際Windowsのブートローダーと必要なファイルをインストールしてみると残りは2.7MB程度になりました(2023年4月時点)。もし今後OSのアップデート等によってESPに保存するファイルが増えたり何かのファイルサイズが大きくなったりすると容量不足に陥ることが容易に予測できます。そのため将来に備えて容量を増やす必要があります。
 
-二つ目は論理と物理の順番が一致していないChromeOS Flexならでは問題で、macOS、WindowsともESPは、論理的と物理的順番が一致している必要があります(一致していない場合にどうなるかについては後ほど記述します)。
+二つ目は論理と物理の順番が一致していないChromeOS Flexならでは問題で、macOS、WindowsともESPのストレージ上の配置は論理と物理の順番が一致したところにないといけません。
 
-そこで、ESPをCheromOS Flexのパーティションの一番最後に移動します。論理的順番はすでに12で一番最後となっていますから、物理的にも12番目になるよう変更するわけです。移動させるといってもパーティションですから、一旦容量の大きなESP用パーティションを作成し、元のESPの内容をコピーしたのち削除します。
+そこで、ESPをCheromOS Flexのパーティションの一番最後に移動します。論理的順番はすでに12で一番最後となっていますから、物理的にも12番目になるよう変更するわけです。移動させるといってもストレージ上のパーティションですから、一旦容量の大きなESP用パーティションを作成し、元のESPの内容をコピーしたのち削除します。
 
 ## パーティションテーブルの編集 その1
 
-最初のパーティションテーブルの編集は、ChromeOS Flexのユーザーデータ用パーティションを縮小し、それによって空いた領域の先頭部分にESPを置き換えるためのFAT用のパーティションを作成します。
+最初のパーティションテーブルの編集は、ChromeOS Flexのユーザーデータ用パーティションを縮小し、それによって空いた領域の先頭部分にESPを置き換えるためのFATのパーティションを作成します。
 
 まず、先ほど保存したp1-sda.dumpを別のファイルにコピーします。そしてFAT用パーティションを作るためにuuidを1個作成します。
 
@@ -203,7 +203,7 @@ root@debian:/mnt# uuid
 f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0
 ```
 
-次にテキストエディタを使って、コピーしたp2-sda.dumpを編集します。元のp1-sda.dumpと編集後のp2-sda.dumpのdiffは次のようになります。
+次にテキストエディタを使って、コピーしたp2-sda.dumpを編集します。元のp1-sda.dumpと編集後のp2-sda.dumpの差分は次のようになります。
 
 ```
 root@debian:/mnt# vi p2-sda.dump
@@ -222,25 +222,15 @@ root@debian:/mnt# diff -u p1-sda.dump p2-sda.dump
 root@debian:/mnt# 
 ```
 
-/dev/sda1の変更は、単純にサイズを小さくするだけです。元は217430912ブロック(1ブロックは512バイト)なので100GB以上あるので、16GBに変更するため33554432に設定しています。なおsizeの数字はかならず8の倍数に設定します。これは今時のストレージのセクタサイズが4Kバイトであるため、8の倍数で合わせています。あっていないとパフォーマンス面でペナルティが発生するためです。
-、編集して13番目にESP用のDOSパーティションを追加します(ESPのファイルシステムはFAT16やFAT32)。この時パーティション用のUUIDが必要になるため、uuidコマンドで生成します。
+/dev/sda1の変更は、単純にサイズを小さくするだけです。元は217430912ブロック(1ブロックは512バイト)なので100GB以上あるわけで、16GBに変更するため33554432に設定しています。ChromeOS Flexにどのぐらいの容量を割り当てるのかは使い方によって変わるわけですが、自分としてはChromeOS Flexのローカールストレージにはデータをほとんど置かないので16GBで十分です。
 
-# uuidコマンド？
+次に13番目のパーティションとして、ESPを置き換えるためのFATパーティションを用意します(ESPのファイルシステムはFAT16やFAT32)。sda13の始まりのLBAはsda1の始まりにサイズを加えたものになるので、`17010688 + 33554432 = 50565120`となります。あとはESPの容量は最低でも100MB程度は確保するべきでしょう。ここでは256MBと元の4倍のサイズを設定しています。つぎにこのパーティションのtypeを示すGUIDですが、ここではWindowsの一般的なデータパーティションを示すEBD0A0A2-B9E5-4433-87C0-68B6B72699C7を使います。そしてuuidのところは用意したuuidを設定します。パーティションの名前は無くてもかまわないのですが、なんとなく"DOS"とつけてみました。
 
-```
-root@debian:/mnt# cp p1-sda.dump p2-sda.dump
-root@debian:/mnt# uuid
-f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0
-root@debian:/mnt# vi p2-sda.dump
-.....(省略).....
-root@debian:/mnt# 
-```
-変更点は次の通り
+なお新規にパーティションを用意する場合は、startとsizeの数字はかならず8の倍数になるよう設定します。現在のストレージの物理セクタサイズは4096バイトが採用されているため、ブロックサイズの512で割った数が8ということです。8の倍数にそろっていないとパフォーマンス面でペナルティが発生するので注意します。
 
-```
-root@debian:/mnt# uuidgen
-8C678F1E-729F-484B-8368-92DF1332E62A
-```
+# uuidコマンドを確認しておく？
+
+p2-sda.dumpの変更内容が確認できたら、sfdiskコマンドを使ってストレージに書き込みます。
 
 ```
 root@debian:/mnt# sfdisk /dev/sda < p2-sda.dump
@@ -277,7 +267,7 @@ Partition table entries are not in disk order.
 root@debian:/mnt# 
 ```
 
-ファイルシステムを作る
+次にsda1とsda13にファイルシステムを作成します。sda1はEXT4ですからmkfs.ext4コマンドを使います。
 ```
 # mkfs.ext4 /dev/sda1
 mke2fs 1.46.2 (28-Feb-2021)
@@ -295,21 +285,26 @@ Allocating group tables: done
 Writing inode tables: done
 Creating journal (32768 blocks): done
 Writing superblocks and filesystem accounting information: done
+```
 
-#
-# mkdosfs  -F 32 -n EFI-SYSTEM /dev/sda13
+sda13はESP用ですからここではFAT32で作成します。
+```
+# mkdosfs -F 32 -n EFI-SYSTEM /dev/sda13
 mkfs.fat 4.2 (2021-01-31)
 # 
 ```
+
+
 ## パーティションをマウントする
+```
+```
+
+## ESPの内容をコピーする
+
 ```
 # mkdir /mnt/efi /mnt/dos
 # mount /dev/sda12 /mnt/efi
 # mount /dev/sda13 /mnt/dos
-```
-
-## ESPの内容をコピーする
-```
 # (cd /mnt/efi ; tar cf - * ) | (cd /mnt/dos ; tar xvf -)
 efi/
 efi/boot/
@@ -329,21 +324,30 @@ syslinux/vmlinuz.A
 syslinux/vmlinuz.B
 syslinux/ldlinux.sys
 syslinux/ldlinux.c32
-# 
+# umount /mnt/dos
+# umount /mnt/efi
 ```
 
 EFIのパーティションを今回作ったdosパーティションにおきかえる
 ```
-cp p2-sda.dump p3-sda.dump
+# cp p2-sda.dump p3-sda.dump
+# vi p3-sda.dump
+.....(省略).....
 # diff -U0 p2-sda.dump p3-sda.dump
---- p2-sda.dump 2023-03-17 04:26:24.000000000 +0000
-+++ p3-sda.dump 2023-03-17 04:47:08.000000000 +0000
+--- p2-sda.dump 2023-04-08 22:51:03.042949000 +0900
++++ p3-sda.dump 2023-04-23 21:43:45.434028000 +0900
+@@ -16 +16 @@
+-/dev/sda8 : start=       69632, size=       32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=9E8B7A51-B372-5B44-B4D4-EB4ABE5F77CF, name="OEM"
++/dev/sda8 : start=       69632, size=      163840, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=9E8B7A51-B372-5B44-B4D4-EB4ABE5F77CF, name="OEM"
 @@ -20,2 +20 @@
--/dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=72511358-8D4A-7B41-A256-57CFE6E97258, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
--/dev/sda13 : start=    58953728, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=33ff6d04-0b5a-4c61-86bc-a8abf8e65428
-+/dev/sda12 : start=    58953728, size=      524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=72511358-8D4A-7B41-A256-57CFE6E97258, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
-# umount /mnt/dos
-# umount /mnt/efi
+-/dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
+-/dev/sda13 : start=    50565120, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0, name="DOS"
++/dev/sda12 : start=    50565120, size=      524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
+#
+```
+
+
+```
 # sfdisk /dev/sda < p3-sda.dump
 # sfdisk --list /dev/sda  | tee p3-sda.list
 Disk /dev/sda: 238.47 GiB, 256060514304 bytes, 500118192 sectors
