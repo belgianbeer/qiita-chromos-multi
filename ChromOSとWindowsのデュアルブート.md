@@ -378,6 +378,10 @@ Device        Start      End  Sectors  Size Type
 /dev/sda12 50565120 51089407   524288  256M EFI System
 
 Partition table entries are not in disk order.
+root@debian:/mnt# 
+```
+
+```
 root@debian:/mnt# diff -U0 --ignore-space-change p1-sda.list p3-sda.list
 --- p1-sda.list 2023-04-08 22:51:03.042130000 +0900
 +++ p3-sda.list 2023-04-08 22:51:03.044934000 +0900
@@ -390,6 +394,7 @@ root@debian:/mnt# diff -U0 --ignore-space-change p1-sda.list p3-sda.list
 @@ -21 +21 @@
 -/dev/sda12   102400    233471    131072    64M EFI System
 +/dev/sda12 50565120 51089407   524288  256M EFI System
+root@debian:/mnt# 
 ```
 
 これでWindowsやmacOSなどの他のOSをインストールする準備ができました。
