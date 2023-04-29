@@ -98,7 +98,7 @@ root@debian:/mnt#
 最初に`sfdisk --list`を使って、ChromeOS Flexのパーティション構成を確認します。なお、この記事で使っているPCの内蔵ストレージは120GBのSSDです。
 
 ```
-root@debian:/mnt# sfdisk --list /dev/sda
+root@debian:/mnt# sfdisk --list /dev/sda | tee p1-sda.list
 Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
 Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
@@ -269,7 +269,7 @@ root@debian:/mnt#
 
 次にsda1とsda13にファイルシステムを作成します。sda1はEXT4ですからmkfs.ext4コマンドを使います。
 ```
-# mkfs.ext4 /dev/sda1
+root@debian:/mnt# mkfs.ext4 /dev/sda1
 mke2fs 1.46.2 (28-Feb-2021)
 /dev/sda1 contains a ext4 file system labelled 'H-STATE'
         last mounted on /mnt/stateful_partition on Fri Mar 17 04:05:56 2023
@@ -285,27 +285,25 @@ Allocating group tables: done
 Writing inode tables: done
 Creating journal (32768 blocks): done
 Writing superblocks and filesystem accounting information: done
+root@debian:/mnt#
 ```
 
 sda13はESP用ですからここではFAT32で作成します。
 ```
-# mkdosfs -F 32 -n EFI-SYSTEM /dev/sda13
+root@debian:/mnt# mkdosfs -F 32 -n EFI-SYSTEM /dev/sda13
 mkfs.fat 4.2 (2021-01-31)
-# 
+root@debian:/mnt# 
 ```
 
+## ESPの内容のコピー
 
-## パーティションをマウントする
-```
-```
-
-## ESPの内容をコピーする
+パーティションの準備ができたので、ESP(sda12)の内容をsda13にコピーします。そのために双方のパーティションをマウントして、ここではtarを使ってコピーしていますが、cp -rなどでもかまいません。コピーが完了したら、sda12とsda13をアンマウントします。
 
 ```
-# mkdir /mnt/efi /mnt/dos
-# mount /dev/sda12 /mnt/efi
-# mount /dev/sda13 /mnt/dos
-# (cd /mnt/efi ; tar cf - * ) | (cd /mnt/dos ; tar xvf -)
+root@debian:/mnt# mkdir /mnt/efi /mnt/dos
+root@debian:/mnt# mount /dev/sda12 /mnt/efi
+root@debian:/mnt# mount /dev/sda13 /mnt/dos
+root@debian:/mnt# (cd /mnt/efi ; tar cf - * ) | (cd /mnt/dos ; tar xvf -)
 efi/
 efi/boot/
 efi/boot/bootx64.efi
@@ -324,16 +322,20 @@ syslinux/vmlinuz.A
 syslinux/vmlinuz.B
 syslinux/ldlinux.sys
 syslinux/ldlinux.c32
-# umount /mnt/dos
-# umount /mnt/efi
+root@debian:/mnt# umount /mnt/dos
+root@debian:/mnt# umount /mnt/efi
 ```
 
-EFIのパーティションを今回作ったdosパーティションにおきかえる
+## ESPの置き換え
+
+sda13に新たなESPが用意できたので、既存のsda12を削除してsda13の領域をsda12のESPに変更します。ただこのままだと元のsda12の領域(物理的にはsda8とsda5の間)に64MBの空きができてしまいます。
+
+Windowsではインストール時に16MBの予約パーティションを作るようで、64MBの空きがあると予約パーティションがsda8の次に作成されてしまい、せっかく論理と物理の順番を12で一致させたESPがずれてしまいますので、それを防ぐためにsda8の領域をsda5の手前まで広げます。
 ```
-# cp p2-sda.dump p3-sda.dump
-# vi p3-sda.dump
+root@debian:/mnt# cp p2-sda.dump p3-sda.dump
+root@debian:/mnt# vi p3-sda.dump
 .....(省略).....
-# diff -U0 p2-sda.dump p3-sda.dump
+root@debian:/mnt# diff -U0 p2-sda.dump p3-sda.dump
 --- p2-sda.dump 2023-04-08 22:51:03.042949000 +0900
 +++ p3-sda.dump 2023-04-23 21:43:45.434028000 +0900
 @@ -16 +16 @@
@@ -343,58 +345,57 @@ EFIのパーティションを今回作ったdosパーティションにおき�
 -/dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 -/dev/sda13 : start=    50565120, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0, name="DOS"
 +/dev/sda12 : start=    50565120, size=      524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
-#
+root@debian:/mnt#
 ```
+sda8のサイズが以前のsda8とsda12のサイズを加えた163840ブロックに変更していて、sda13のstartとsizeはそのままで、13を12に変更して、typeとuuidをsda12のものに書き換えています。
 
+再びsfdiskコマンドでパーティションの構成を変更します。変更後のパーティション情報は次のようになります。
 
 ```
-# sfdisk /dev/sda < p3-sda.dump
-# sfdisk --list /dev/sda  | tee p3-sda.list
-Disk /dev/sda: 238.47 GiB, 256060514304 bytes, 500118192 sectors
-Disk model: PALIT PSP256 SSD
+root@debian:/mnt# sfdisk /dev/sda < p3-sda.dump
+.....(省略).....
+root@debian:/mnt# sfdisk --list /dev/sda
+Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
+Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 Disklabel type: gpt
-Disk identifier: 9A788614-6CD4-1B46-9F6F-748287F5B228
+Disk identifier: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 
 Device        Start      End  Sectors  Size Type
-/dev/sda1  17010688 58953727 41943040   20G Linux filesystem
+/dev/sda1  17010688 50565119 33554432   16G Linux filesystem
 /dev/sda2        69    32836    32768   16M ChromeOS kernel
 /dev/sda3   8622080 17010687  8388608    4G ChromeOS root fs
 /dev/sda4     32837    65604    32768   16M ChromeOS kernel
 /dev/sda5    233472  8622079  8388608    4G ChromeOS root fs
 /dev/sda6        65       65        1  512B ChromeOS kernel
 /dev/sda7        66       66        1  512B ChromeOS root fs
-/dev/sda8     69632   102399    32768   16M Linux filesystem
+/dev/sda8     69632   233471   163840   80M Linux filesystem
 /dev/sda9        67       67        1  512B ChromeOS reserved
 /dev/sda10       68       68        1  512B ChromeOS reserved
 /dev/sda11       64       64        1  512B unknown
-/dev/sda12 58953728 59478015   524288  256M EFI System
+/dev/sda12 50565120 51089407   524288  256M EFI System
 
 Partition table entries are not in disk order.
-# 
-```
-## 変更点を確認してみます
-```
-# diff -U0 --ignore-space-change p1-sda.list p3-sda.list
---- p1-sda.list 2023-03-17 04:18:02.000000000 +0000
-+++ p3-sda.list 2023-03-17 04:53:00.000000000 +0000
+root@debian:/mnt# diff -U0 --ignore-space-change p1-sda.list p3-sda.list
+--- p1-sda.list 2023-04-08 22:51:03.042130000 +0900
++++ p3-sda.list 2023-04-08 22:51:03.044934000 +0900
 @@ -10 +10 @@
--/dev/sda1  17010688 500118143 483107456 230.4G Linux filesystem
-+/dev/sda1  17010688 58953727 41943040   20G Linux filesystem
+-/dev/sda1  17010688 234441599 217430912 103.7G Linux filesystem
++/dev/sda1  17010688 50565119 33554432   16G Linux filesystem
+@@ -17 +17 @@
+-/dev/sda8     69632    102399     32768    16M Linux filesystem
++/dev/sda8     69632   233471   163840   80M Linux filesystem
 @@ -21 +21 @@
 -/dev/sda12   102400    233471    131072    64M EFI System
-+/dev/sda12 58953728 59478015   524288  256M EFI System
-#
++/dev/sda12 50565120 51089407   524288  256M EFI System
 ```
-## 空きパーティションを隠す
 
-```
-# cp p3-sda.dump p4-sda.dump-temp
-# diff -U0 p3-sda.list p4-sda.list-temp
-```
-## Window のインストール
+これでWindowsやmacOSなどの他のOSをインストールする準備ができました。
+
+## WindowまたはmacOSのインストール
+
 
 
 ## Debian Live で起動
