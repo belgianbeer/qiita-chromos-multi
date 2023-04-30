@@ -358,7 +358,7 @@ root@debian:/mnt#
 sda8は、サイズを以前のsda8のサイズにsda12のサイズを加えた163840ブロック(80MB)に変更しています。sda12はtypeとuuidはそのままで、sda13のstartと
 sizeの値に変更します。そしてsda13はもう不要なので単純に削除します。
 
-上記の変更が正しく行えているなら、再びsfdiskコマンドでパーティションテーブルを書き換えます。
+以上の変更が正しくできてるのを確認したら、再びsfdiskコマンドでパーティションテーブルを書き換えます。
 
 ```
 root@debian:/mnt# sfdisk /dev/sda < p3-sda-dump
@@ -417,11 +417,18 @@ root@debian:/mnt# diff -U0 --ignore-space-change p1-sda-list p3-sda-list
 root@debian:/mnt# poweroff
 ```
 
+この後PCの電源を入れると、ChromeOS Flexの起動を確認できます。もし起動しなかった場合はどこかの手順に誤りがあったことになりますので、その場合ChromeOS Flexのインストールからやり直すか、Debian Liveでのパーティションテーブルの修正が必要になります。
+
 ## WindowまたはmacOSのインストール
 
+今度はmacOSやWindowsのインストールメディアを使ってPCを起動し、対象OSをインストールします。インストール時に注意するのは、今までの作業で用意したChromeOS Flexのパーティションを壊さないよう、ストレージの空き領域に正しくインストールすることです。そこさえ間違えなければあとは通常のmacOS、Windowsのインストールとなんら変わりありません。
 
+インストールが終了したら、それぞれのOSが動くことを確認します。この状態では**WindowsやmacOS等インストールしたOSは起動しますが、ChromeOS Flexは起動できなくなっています**。これはWindowsやmacOSがインストールのために新たなパーティションを作成すると、ChromeOS Flexのパーティションテーブルを書き換えてしまうためです。
 
 ## Debian Live で起動
+
+今度は起動しなくなっているChromeOS Flexのパーティションテーブルの修正です。再びDebian LiveのUSBメモリを使って起動し、
+
 
 ```
 # sfdisk --list /dev/sda > p5-sda-list
