@@ -12,7 +12,7 @@ ChromeOS Flexってどうなの？と聞かれることが有りますが、Wind
 
 ## お勧めしません
 
-いきなりですが、**ChromeOS Flexと他のOSのデュアルブート環境を作るのはお勧めとは言えません**。理由は簡単でChromeOS Flexとのマルチブート環境のPCでWindowsやmacOSからシステムディスクに対する何らかの操作を行うと、ChromeOS Flexのパーティション情報を破壊する為です。これはChromeOS Flexのディスクパーティションが、一般的な構成と違って少々トリッキーになっていることによります。破壊されてもパーティション情報のバックアップがあれば復帰できるのですが、手間がかかりますし、あれ？っと思ったときに速やかに対処を行うセンスが要求されます。とは言えこの記事にその方法を記載しますから、本記事が理解できる人であれば困ることは無いと思います。
+いきなりですが、**ChromeOS Flexと他のOSのデュアルブート環境を作るのはお勧めとは言えません**。理由は簡単でChromeOS Flexとのマルチブート環境のPCでWindowsやmacOSからシステムディスクに対する何らかの操作を行うと、ChromeOS Flexのパーティションテーブルを破壊する為です。これはChromeOS Flexのディスクパーティションが、一般的な構成と違って少々トリッキーになっていることによります。破壊されてもパーティションテーブルのバックアップがあれば復帰できるのですが、手間がかかりますし、あれ？っと思ったときに速やかに対処を行うセンスが要求されます。とは言えこの記事にその方法を記載しますから、本記事が理解できる人であれば困ることは無いと思います。
 
 ## 用意するもの
 
@@ -24,13 +24,16 @@ ChromeOS Flexとのマルチブート環境を作るのに必要なものは次�
 1. Debian Liveを書き込んだUSBメモリ(2GB以上)
 1. 記録用のUSBメモリ(100KB以上の空きがあるもの)
 
-UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、他OSとのブートの切り替えにUEFIに用意されているブートセレクタを使うため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。PC本体がIntel CPUのMacであれば条件を満たしています。
+UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、他OSとのブートの切り替えにUEFIに用意されているブートセレクタを使うため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。PCがIntel CPUのMacであれば条件を満たしています。
+
+macOS の起動可能なインストーラを作成する
+windows ダウンロード
 
 ### [ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当してなくても、よほどでなければChromeOS Flexが動作すると思います。
 
 マルチブート環境を作るのですから、OSインストール用のUSBメモリがChromeOS FlexとWindowsまたはmacOSのものが必要なのは当然として、ディスクパーティションの構成を編集するためにDebian LiveのUSBメモリも必要になります。Debian Liveでなくても良いのですがシェルが起動できてsfdiskとエディタ等が利用できるLinuxの起動用USBメモリが条件となります。
 
-この他に記録用のUSBメモリも必要になります。Debian LiveのUSBメモリに記録できれば済むのですが、Debian Liveではファイルシステムの肝心な部分はRead Onlyでマウントされているため書き込むことができません。パーティション構成のテキストファイルを数個保存するだけなので100Kバイトもあれば間に合います。手頃なものを用意してください。
+この他に記録用のUSBメモリも必要になります。Debian LiveのUSBメモリに記録できれば済むのですが、Debian Liveではファイルシステムの肝心な部分はRead Onlyでマウントされているため書き込むことができません。パーティションテーブルのテキストファイルを数個保存するだけなので100Kバイトもあれば間に合います。手頃なものを用意してください。
 
 ## ChromeOS Flexのインストール
 
@@ -77,7 +80,7 @@ user@debian:~$ sudo -i
 root@debian:~# 
 ```
 
-aptを使ってdosfstoolsをインストールします。
+後ほどmkdosfsコマンドを使うため、aptを使ってdosfstoolsをインストールします。
 
 ```
 root@debian:~# apt update
@@ -85,7 +88,7 @@ root@debian:~# apt install dosfstools
 root@debian:~# 
 ```
 
-記録用のUSBメモリをマウントして、マウントポイントにcdします。これでUSBメモリに記録が残せるようになります。
+記録用のUSBメモリをマウントして、マウントポイントにcdします。これでUSBメモリにコマンドの出力結果などを残せるようになります。
 
 ```
 root@debian:~# mount /dev/sdc1 /mnt
@@ -93,12 +96,12 @@ root@debian:~# cd /mnt
 root@debian:/mnt# 
 ```
 
-### ChromeOS Flexの不思議なパーティション構成
+### ChromeOS Flexの不思議なパーティションテーブル
 
-最初に`sfdisk --list`を使って、ChromeOS Flexのパーティション構成を確認します。なお、この記事で使っているPCの内蔵ストレージは120GBのSSDです。
+最初に`sfdisk --list`を使って、ChromeOS Flexのパーティションテーブルを確認します。この記事で使っているPCの内蔵ストレージは120GBのSSDです。また、後ほど比較するためにp1-sda-listというファイルに結果を保存しています。
 
 ```
-root@debian:/mnt# sfdisk --list /dev/sda | tee p1-sda.list
+root@debian:/mnt# sfdisk --list /dev/sda | tee p1-sda-list
 Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
 Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
@@ -125,14 +128,14 @@ Partition table entries are not in disk order.
 root@debian:/mnt#
 ```
 
-パーティション構成を見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexでは12ものパーティションがあり、更にパーティションの論理的順番と物理的順番が一致していません。たとえばsda1のスタートセクタは170010688ですが、次のsda2の69より大きくなっています。通常ディスクにパーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`で見ればスタートセクタの値は小さいものから順に並びます。ところがどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
+パーティションテーブルを見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexでは12ものパーティションがあり、更にパーティションの論理的順番と物理的順番が一致していません。たとえばsda1のスタートセクタは170010688ですが、次のsda2の69より大きくなっています。通常ディスクにパーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`で見ればスタートセクタの値は小さいものから順に並びます。ところがどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
 
-### ChromOS Flexのディスクパーティション構成のバックアップ
+### ChromOS Flexのディスクパーティションテーブルのバックアップ
 
-ディスクパーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールした後に問題になります。そのため後で利用できるようChromeOS Flexインストール直後のパーティション構成を保存します。ここでは`sfdisk --dump`でパーティションの構成を`p1-sda-dump`というファイルに保存しています。
+ディスクパーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールした後に問題になります。そのため後で利用できるようChromeOS Flexインストール直後のパーティションテーブルを保存します。ここでは`sfdisk --dump`でパーティションの構成を`p1-sda-dump`というファイルに保存しています。
 
 ```
-root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda.dump
+root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda-dump
 label: gpt
 label-id: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
 device: /dev/sda
@@ -159,7 +162,7 @@ root@debian:/mnt#
 
 ### WindowsやmacOS用の空き領域の確保
 
-次のリストは最初に確認した`sfdisk --list /dev/sda`のパーティション構成をスタートセクタの小さい順つまり物理順に並び変え、説明のためパーティションの順番をIDとして追加してあります。
+次のリストは最初に確認した`sfdisk --list /dev/sda`のパーティションテーブルをスタートセクタの小さい順つまり物理順に並び変え、説明のためパーティションの順番をIDとして追加してあります。
 
 ```
 ID : Device        Start       End   Sectors   Size Type
@@ -195,20 +198,20 @@ ID : Device        Start       End   Sectors   Size Type
 
 最初のパーティションテーブルの編集は、ChromeOS Flexのユーザーデータ用パーティションを縮小し、それによって空いた領域の先頭部分にESPを置き換えるためのFATのパーティションを作成します。
 
-まず、先ほど保存したp1-sda.dumpを別のファイルにコピーします。そしてFAT用パーティションを作るためにuuidを1個作成します。
+まず、先ほど保存したp1-sda-dumpを別のファイルにコピーします。そしてFAT用パーティションを作るためにuuidを1個作成します。
 
 ```
-root@debian:/mnt# cp p1-sda.dump p2-sda.dump
+root@debian:/mnt# cp p1-sda-dump p2-sda-dump
 root@debian:/mnt# uuid
 f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0
 ```
 
-次にテキストエディタを使って、コピーしたp2-sda.dumpを編集します。元のp1-sda.dumpと編集後のp2-sda.dumpの差分は次のようになります。
+次にテキストエディタを使って、コピーしたp2-sda-dumpを編集します。元のp1-sda-dumpと編集後のp2-sda-dumpの差分は次のようになります。
 
 ```
-root@debian:/mnt# vi p2-sda.dump
+root@debian:/mnt# vi p2-sda-dump
 .....(省略).....
-root@debian:/mnt# diff -u p1-sda.dump p2-sda.dump
+root@debian:/mnt# diff -u p1-sda-dump p2-sda-dump
 --- p1-sda-dump 2023-04-08 22:51:03.041333000 +0900
 +++ p2-sda-dump 2023-04-08 22:51:03.042949000 +0900
 @@ -8,3 +8,3 @@
@@ -230,17 +233,16 @@ root@debian:/mnt#
 
 # uuidコマンドを確認しておく？
 
-p2-sda.dumpの変更内容が確認できたら、sfdiskコマンドを使ってストレージに書き込みます。
+p2-sda-dumpの変更内容が確認できたら、sfdiskコマンドを使ってストレージに書き込みます。
 
 ```
-root@debian:/mnt# sfdisk /dev/sda < p2-sda.dump
-.....(省略).....
-
-root@debian:/mnt# 
+root@debian:/mnt# sfdisk /dev/sda < p2-sda-dump
 ```
 
+変更後のパーティションテーブルは次のようになります。
+
 ```
-root@debian:/mnt# sfdisk --list /dev/sda
+root@debian:/mnt# sfdisk --list /dev/sda | tee p2-sda-list
 Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
 Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
@@ -289,7 +291,7 @@ Writing superblocks and filesystem accounting information: done
 root@debian:/mnt#
 ```
 
-sda13はESP用ですからここではFAT32で作成します。
+sda13はESP用ですからFAT32で作成します。
 ```
 root@debian:/mnt# mkdosfs -F 32 -n EFI-SYSTEM /dev/sda13
 mkfs.fat 4.2 (2021-01-31)
@@ -298,7 +300,7 @@ root@debian:/mnt#
 
 ## ESPの内容のコピー
 
-パーティションの準備ができたので、ESP(sda12)の内容をsda13にコピーします。そのために双方のパーティションをマウントして、ここではtarを使ってコピーしていますが、cp -rなどでもかまいません。コピーが完了したら、sda12とsda13をアンマウントします。
+パーティションの準備ができたので、ESP(sda12)の内容をsda13にコピーします。ここでは双方のパーティションをマウントしてtarを使ってコピーしていますが、cp -rなど他の方法でもかまいません。コピーが完了したら、sda12とsda13をアンマウントします。
 
 ```
 root@debian:/mnt# mkdir /mnt/efi /mnt/dos
@@ -329,16 +331,21 @@ root@debian:/mnt# umount /mnt/efi
 
 ## ESPの置き換え
 
-sda13に新たなESPが用意できたので、既存のsda12を削除してsda13の領域をsda12のESPに変更します。ただこのままだと元のsda12の領域(物理的にはsda8とsda5の間)に64MBの空きができてしまいます。
+sda13に新たなESPが用意できたので、既存のsda12を削除してsda13の領域をsda12のESPに変更します。ただしそれだけでは元のsda12の領域(物理的にはsda8とsda5の間)に64MBの空きができてしまいます。Windowsの場合インストール時に16MBの予約パーティションを作るようで、ここが空いたままだと予約パーティションがsda8の次に作成されてしまいます。そうなると論理と物理の順番を12で一致させたESPがずれてしまいますので、それを防ぐためにsda8の領域をsda5の手前まで広げます。
 
-Windowsではインストール時に16MBの予約パーティションを作るようで、64MBの空きがあると予約パーティションがsda8の次に作成されてしまい、せっかく論理と物理の順番を12で一致させたESPがずれてしまいますので、それを防ぐためにsda8の領域をsda5の手前まで広げます。
+ということで今度はp2-sda.dumpをp3-sda-dumpにコピーして、p3-sda-dumpを編集します。
+
 ```
-root@debian:/mnt# cp p2-sda.dump p3-sda.dump
-root@debian:/mnt# vi p3-sda.dump
-.....(省略).....
-root@debian:/mnt# diff -U0 p2-sda.dump p3-sda.dump
---- p2-sda.dump 2023-04-08 22:51:03.042949000 +0900
-+++ p3-sda.dump 2023-04-23 21:43:45.434028000 +0900
+root@debian:/mnt# cp p2-sda-dump p3-sda-dump
+root@debian:/mnt# vi p3-sda-dump
+```
+
+編集した内容は次のようになります。
+
+```
+root@debian:/mnt# diff -U0 p2-sda-dump p3-sda-dump
+--- p2-sda-dump 2023-04-08 22:51:03.042949000 +0900
++++ p3-sda-dump 2023-04-23 21:43:45.434028000 +0900
 @@ -16 +16 @@
 -/dev/sda8 : start=       69632, size=       32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=9E8B7A51-B372-5B44-B4D4-EB4ABE5F77CF, name="OEM"
 +/dev/sda8 : start=       69632, size=      163840, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=9E8B7A51-B372-5B44-B4D4-EB4ABE5F77CF, name="OEM"
@@ -348,14 +355,19 @@ root@debian:/mnt# diff -U0 p2-sda.dump p3-sda.dump
 +/dev/sda12 : start=    50565120, size=      524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 root@debian:/mnt#
 ```
-sda8のサイズが以前のsda8とsda12のサイズを加えた163840ブロックに変更していて、sda13のstartとsizeはそのままで、13を12に変更して、typeとuuidをsda12のものに書き換えています。
+sda8は、サイズを以前のsda8のサイズにsda12のサイズを加えた163840ブロック(80MB)に変更しています。sda12はtypeとuuidはそのままで、sda13のstartと
+sizeの値に変更します。そしてsda13はもう不要なので単純に削除します。
 
-再びsfdiskコマンドでパーティションの構成を変更します。変更後のパーティション情報は次のようになります。
+上記の変更が正しく行えているなら、再びsfdiskコマンドでパーティションテーブルを書き換えます。
 
 ```
-root@debian:/mnt# sfdisk /dev/sda < p3-sda.dump
-.....(省略).....
-root@debian:/mnt# sfdisk --list /dev/sda
+root@debian:/mnt# sfdisk /dev/sda < p3-sda-dump
+```
+
+変更後のパーティションテーブルは次のようになります。
+
+```
+root@debian:/mnt# sfdisk --list /dev/sda | tee p3-sda-list
 Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
 Disk model: INTEL SSDSC2BW12
 Units: sectors of 1 * 512 = 512 bytes
@@ -382,10 +394,12 @@ Partition table entries are not in disk order.
 root@debian:/mnt# 
 ```
 
+最初に保存したp1-sda-listと比較すると次のようになります。
+
 ```
-root@debian:/mnt# diff -U0 --ignore-space-change p1-sda.list p3-sda.list
---- p1-sda.list 2023-04-08 22:51:03.042130000 +0900
-+++ p3-sda.list 2023-04-08 22:51:03.044934000 +0900
+root@debian:/mnt# diff -U0 --ignore-space-change p1-sda-list p3-sda-list
+--- p1-sda-list 2023-04-08 22:51:03.042130000 +0900
++++ p3-sda-list 2023-04-08 22:51:03.044934000 +0900
 @@ -10 +10 @@
 -/dev/sda1  17010688 234441599 217430912 103.7G Linux filesystem
 +/dev/sda1  17010688 50565119 33554432   16G Linux filesystem
@@ -395,10 +409,13 @@ root@debian:/mnt# diff -U0 --ignore-space-change p1-sda.list p3-sda.list
 @@ -21 +21 @@
 -/dev/sda12   102400    233471    131072    64M EFI System
 +/dev/sda12 50565120 51089407   524288  256M EFI System
-root@debian:/mnt# 
 ```
 
-これでWindowsやmacOSなどの他のOSをインストールする準備ができました。
+これでWindowsやmacOSなどの他のOSをインストールする準備ができたので、PCをシャットダウンします。
+
+```
+root@debian:/mnt# poweroff
+```
 
 ## WindowまたはmacOSのインストール
 
@@ -407,10 +424,10 @@ root@debian:/mnt#
 ## Debian Live で起動
 
 ```
-# sfdisk --list /dev/sda > p5-sda.list
-# sfdisk --dump /dev/sda > p5-sda.dump
-# cp p3-sda.dump p6-sda.dump
-# tail -2 p5-sda.dump >> p6-sda.dump
-# sfdisk /dev/sda < p6-sda.dump
-# sfdisk --list /dev/sda > p6-sda.list
+# sfdisk --list /dev/sda > p5-sda-list
+# sfdisk --dump /dev/sda > p5-sda-dump
+# cp p3-sda-dump p6-sda-dump
+# tail -2 p5-sda-dump >> p6-sda-dump
+# sfdisk /dev/sda < p6-sda-dump
+# sfdisk --list /dev/sda > p6-sda-list
 ```
