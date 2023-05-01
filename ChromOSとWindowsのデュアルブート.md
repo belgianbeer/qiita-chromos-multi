@@ -158,7 +158,7 @@ sector-size: 512
 /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 root@debian:/mnt# 
 ```
-リストを見ると、GPTでの各エントリーは先頭のLBA、サイズ(GPTで記録されるのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、各パーティション固有のUUID、パーティションの名前、アトリビュートからなっていることがわかります。
+リストを見るとわかるようにGPTでの各パーティションのエントリーは、先頭のLBA、サイズ(実際に記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、各パーティション固有のUUID、パーティションの名前、アトリビュート、そしてsda1、sda2等のインデックスから構成されています。
 
 ### WindowsやmacOS用の空き領域の確保
 
@@ -411,7 +411,7 @@ root@debian:/mnt# diff -U0 --ignore-space-change p1-sda-list p3-sda-list
 +/dev/sda12 50565120 51089407   524288  256M EFI System
 ```
 
-これでWindowsやmacOSなどの他のOSをインストールする準備ができたので、PCをシャットダウンします。
+これでWindowsやmacOSなどの他のOSをインストールする準備ができたので、PCをシャットダウンします。Debian LiveのUSBメモリとパーティションテーブルのメモをとった記録用のUSBメモリは後の作業で使用するのでそのまま保管してください。
 
 ```
 root@debian:/mnt# poweroff
@@ -427,14 +427,63 @@ root@debian:/mnt# poweroff
 
 ## Debian Live で起動
 
-今度は起動しなくなっているChromeOS Flexのパーティションテーブルの修正です。再びDebian LiveのUSBメモリを使って起動し、
-
+今度は起動しなくなっているChromeOS Flexのパーティションテーブルの修正です。再びDebian LiveのUSBメモリで起動し、前の作業でメモをとったUSBメモリを/mntにマウントします。なおaptコマンドを使うことはありません。
 
 ```
-# sfdisk --list /dev/sda > p5-sda-list
-# sfdisk --dump /dev/sda > p5-sda-dump
-# cp p3-sda-dump p6-sda-dump
-# tail -2 p5-sda-dump >> p6-sda-dump
+user@debian:~$ sudo -i
+root@debian:~# mount /dev/sdc1 /mnt
+root@debian:~# cd /mnt
+root@debian:/mnt# 
+```
+
+起動しなくなったパーティションテーブルの状況を`sfdisk --list`で確認します。
+
+```
+root@debian:/mnt# sfdisk --list /dev/sda | tee p4-sda-list
+Disk /dev/sda: 111.79 GiB, 120034123776 bytes, 234441648 sectors
+Disk model: INTEL SSDSC2BW12
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: AC161E76-BF4B-924D-9C72-06CE3C6EABCF
+
+Device        Start       End   Sectors  Size Type
+/dev/sda1        64        64         1  512B unknown
+/dev/sda2        65        65         1  512B ChromeOS kernel
+/dev/sda3        66        66         1  512B ChromeOS root fs
+/dev/sda4        67        67         1  512B ChromeOS reserved
+/dev/sda5        68        68         1  512B ChromeOS reserved
+/dev/sda6        69     32836     32768   16M ChromeOS kernel
+/dev/sda7     32837     65604     32768   16M ChromeOS kernel
+/dev/sda8     69632    233471    163840   80M Linux filesystem
+/dev/sda9    233472   8622079   8388608    4G ChromeOS root fs
+/dev/sda10  8622080  17010687   8388608    4G ChromeOS root fs
+/dev/sda11 17010688  50565119  33554432   16G Linux filesystem
+/dev/sda12 50565120  51089407    524288  256M EFI System
+/dev/sda13 51089408  51122175     32768   16M Microsoft reserved
+/dev/sda14 51122176 234440703 183318528 87.4G Microsoft basic data
+```
+
+sda13とsda14がWindowsのインストールによって追加されたパーティションですが(macOSの場合はsda13のみ)、sda1からsda11までが見事なまでに物理的な順にパーティションテーブルが並んでいます。つまりWindowsやmacOSでは、新規のパーティションを追加するためにパーティションテーブルを書き換える際、パーティションインデックスを物理順に並べ替えてしまいます。
+
+そこで、このパーティションのインデックスを元のChromeOS Flexの順番に戻せば、ChromeOS Flexが起動するようになります。
+
+まず`sfdisk --dump`でパーティションテーブルを保存します。
+
+```
+root@debian:/mnt# sfdisk --dump /dev/sda > p4-sda-dump
+```
+
+このp4-sda-dumpを前に保存したp3-sda-dumpと比べると、パーティションの大きさや、type, uuidの情報は変わっていないことがわかります。そこで今回追加されたsda13, sda14(Macではsda13のみ)のパーティション情報をp3-sda-dumpに追加すれば、ChromeOS Flexのパーティションテーブルを修復できます。
+
+修復するためのパーティションテーブルを作るのは、エディタを使うこともなく次のコマンドラインで完了します。
+
+```
+root@debian:/mnt# cp p3-sda-dump p5-sda-dump
+root@debian:/mnt# tail -n 2 p4-sda-dump >> p5-sda-dump
+```
+
 # sfdisk /dev/sda < p6-sda-dump
 # sfdisk --list /dev/sda > p6-sda-list
 ```
