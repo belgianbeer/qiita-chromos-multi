@@ -158,7 +158,7 @@ sector-size: 512
 /dev/sda12 : start=      102400, size=      131072, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
 root@debian:/mnt# 
 ```
-リストを見るとわかるようにGPTでの各パーティションのエントリーは、先頭のLBA、サイズ(実際に記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、各パーティション固有のUUID、パーティションの名前、アトリビュート、そしてsda1、sda2等のインデックスから構成されています。
+リストを見るとわかるようにGPTでの各パーティションのエントリーは、先頭のLBA、サイズ(実際に記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、各パーティション固有のUUID、パーティションの名前、アトリビュートから構成されています。
 
 ### WindowsやmacOS用の空き領域の確保
 
@@ -465,25 +465,42 @@ Device        Start       End   Sectors  Size Type
 /dev/sda14 51122176 234440703 183318528 87.4G Microsoft basic data
 ```
 
-sda13とsda14がWindowsのインストールによって追加されたパーティションですが(macOSの場合はsda13のみ)、sda1からsda11までが見事なまでに物理的な順にパーティションテーブルが並んでいます。つまりWindowsやmacOSでは、新規のパーティションを追加するためにパーティションテーブルを書き換える際、パーティションインデックスを物理順に並べ替えてしまいます。
+sda13とsda14がWindowsのインストールによって追加されたパーティションですが、さらにsda15も増えている場合があります。macOSの場合はsda13のみの1つです。
 
-そこで、このパーティションのインデックスを元のChromeOS Flexの順番に戻せば、ChromeOS Flexが起動するようになります。
+sda12は事前にパーティションインデックスと物理的な順番が一致するように対処してあったので変化はありませんが、sda1からsda11までが物理的な順にパーティションインデックスが変更されて綺麗にならんでしまっています。ようするにWindowsやmacOSでは、新規のパーティションを追加するためにパーティションテーブルを書き換える際、パーティションインデックスを物理順に並べ替えてしまいChromeOS Flexが起動できなくなっているわけです。
 
-まず`sfdisk --dump`でパーティションテーブルを保存します。
+そこで、パーティションのインデックスを元のChromeOS Flexの順番に戻せば、ChromeOS Flexが起動できるようになります。
+
+まず`sfdisk --dump`で現状のパーティションテーブルをp4-sda-dumpに保存します。
 
 ```
 root@debian:/mnt# sfdisk --dump /dev/sda > p4-sda-dump
 ```
 
-このp4-sda-dumpを前に保存したp3-sda-dumpと比べると、パーティションの大きさや、type, uuidの情報は変わっていないことがわかります。そこで今回追加されたsda13, sda14(Macではsda13のみ)のパーティション情報をp3-sda-dumpに追加すれば、ChromeOS Flexのパーティションテーブルを修復できます。
+p4-sda-dumpを前に保存したp3-sda-dumpと比べると、パーティションの大きさや、type, uuidの情報は変わっていないことがわかります。そこで今回追加されたsda13, sda14(あるいはsda15まで、Macではsda13のみ)のパーティション情報をp3-sda-dumpに追加してストレージに反映すれば、ChromeOS Flexのパーティションテーブルを修復できます。
 
 修復するためのパーティションテーブルを作るのは、エディタを使うこともなく次のコマンドラインで完了します。
 
 ```
 root@debian:/mnt# cp p3-sda-dump p5-sda-dump
 root@debian:/mnt# tail -n 2 p4-sda-dump >> p5-sda-dump
+root@debian:/mnt# diff -U1  p3-sda-dump p5-sda-dump
+--- p3-sda-dump 2023-04-26 12:30:22.078533000 +0900
++++ p5-sda-dump 2023-04-26 12:30:22.078899000 +0900
+@@ -20 +20,3 @@
+ /dev/sda12 : start=    50565120, size=      524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FF81FED5-A756-3C44-9693-3E41EE823552, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
++/dev/sda13 : start=    51089408, size=       32768, type=E3C9E316-0B5C-4DB8-817D-F92DF00215AE, uuid=46FFCC48-8858-4FF6-BE06-E352C55E9FD1, name="Microsoft reserved partition", attrs="GUID:63"
++/dev/sda14 : start=    51122176, size=   183318528, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=2C6B3DFE-8DF4-4BF1-8C1F-01173A1042E1, name="Basic data partition"
 ```
 
-# sfdisk /dev/sda < p6-sda-dump
+diffの結果が問題無いことを確認したら、修正したパーティションテーブルをストレージに反映します。
+
+```
+root@debian:/mnt# sfdisk /dev/sda < p5-sda-dump
+```
+以上で、
+
+
+# 
 # sfdisk --list /dev/sda > p6-sda-list
 ```
