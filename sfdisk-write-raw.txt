@@ -1,10 +1,10 @@
 
-[?2004l[?2004hroot@cfsx2debian:~# 
-[?2004l[?2004hroot@cfsx2debian:~# cd sda-backup/
-[?2004l[?2004hroot@cfsx2debian:~/sda-backup# ls
-[?2004lchromeOS-sda-backup  p0-sda-dump  p0-sda-list  p1-sda-dump  p1-sda-list
+[?2004l[?2004hroot@cfsx2debian:~# 
+[?2004l[?2004hroot@cfsx2debian:~# cd sda-backup/
+[?2004l[?2004hroot@cfsx2debian:~/sda-backup# ls
+[?2004lchromeOS-sda-backup  p0-sda-dump  p0-sda-list  p1-sda-dump  p1-sda-list
 [?2004hroot@cfsx2debian:~/sda-backup# sfdisk --force < p0    /dev/sda <<  p0-sda-dump 
-[?2004lChecking that no-one is using this disk right now ... FAILED
+[?2004lChecking that no-one is using this disk right now ... FAILED
 
 [31mThis disk is currently in use - repartitioning is probably a bad idea.
 Umount all file systems, and swapoff all swap partitions on this disk.
