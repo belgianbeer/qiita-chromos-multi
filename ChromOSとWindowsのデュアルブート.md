@@ -493,7 +493,7 @@ root@debian:/mnt# diff -U1  p3-sda-dump p5-sda-dump
 +/dev/sda14 : start=    51122176, size=   183318528, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=2C6B3DFE-8DF4-4BF1-8C1F-01173A1042E1, name="Basic data partition"
 ```
 
-diffの結果が問題無いことを確認したら、修正したパーティションテーブルをストレージに反映します。
+ p3-sda-dumpと比較してsda13以降のパーティション情報が追加できていれば問題ありません。確認できたら修正したパーティションテーブルをストレージに反映します。
 
 ```
 root@debian:/mnt# sfdisk /dev/sda < p5-sda-dump
