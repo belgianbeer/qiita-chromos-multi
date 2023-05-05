@@ -22,12 +22,13 @@ ChromeOS Flexとのマルチブート環境を作るのに必要なものは次�
 1. Debian Liveを書き込んだUSBメモリ(2GB以上)
 1. 記録用のUSBメモリ(100KB以上の空きがあるもの)
 
-UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、この記事では他OSとのブートの切り替えにUEFIに用意されているブートセレクタを使うことを前提としているため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。PC本体がIntel CPUのMacであれば条件を満たしています。
+UEFIをサポートしていないPCでもChromeOS Flex自体は起動できますが、この記事では他OSとのブートの切り替えにUEFIで用意されているブートセレクタを使うことを前提としているため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。PC本体がIntel CPUのMacであれば条件を満たしています。
+
+もちろん対象PCでChromeOS FLexが動くことを事前に確認しておく必要があります。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当していれば文句なしですが、そうでない場合は事前にChromeOS FlexのインストールUSBメモリを使って動作確認を行うのが良いでしょう。
 
 macOS の起動可能なインストーラを作成する
 windows ダウンロード
 
-### [ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当してなくても、よほどでなければChromeOS Flexが動作すると思います。
 
 マルチブート環境を作るのですから、OSインストール用のUSBメモリがChromeOS FlexとWindowsまたはmacOSのものが必要なのは当然として、ディスクパーティションの構成を編集するためにDebian LiveのUSBメモリも必要になります。Debian Liveでなくても良いのですがシェルが起動できてsfdiskとエディタ等が利用できるLinuxの起動用USBメモリが条件となります。
 
