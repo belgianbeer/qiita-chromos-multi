@@ -203,7 +203,7 @@ ID : Device        Start       End   Sectors   Size Type
 
 ```
 root@debian:/mnt# cp p1-sda-dump p2-sda-dump
-root@debian:/mnt# uuid
+root@debian:/mnt# uuidgen
 f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0
 ```
 
