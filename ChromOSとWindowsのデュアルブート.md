@@ -127,11 +127,11 @@ Partition table entries are not in disk order.
 root@debian:/mnt#
 ```
 
-パーティションテーブルを見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションが12個もあり(2023年5月現在)、更にパーティションエントリーの順番(論理的順番)とそこで指定されるストレージ上の物理的順番が一致していません。たとえばsda1のスタートセクタは170010688ですが、sda2はsda1より小さく、sda3はその中間で、sda4ではまた小さい値になっています。通常パーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`等で見ればスタートセクタの値は小さいものから順に並びます。しかしどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
+パーティションテーブルを見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションが12個もあり、更にパーティションテーブルの順番(/dev/sdaXのXで示す数字がパーティションテーブルのインデックス、つまり論理的順番)とそこで指定されるストレージ上の物理的順番が一致していません。たとえばsda1のスタートセクタは170010688ですが、sda2はsda1より小さく、sda3はその中間で、sda4ではまた小さい値になっています。通常パーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`等で見ればスタートセクタの値は小さいものから順に並びます。しかしどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
 
 ## ChromOS Flexのパーティションテーブルのバックアップ
 
-パーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールしたときに問題になります。そのためここではChromeOS Flexインストール直後のパーティションテーブルのバックアップを保存します。次の例は`sfdisk --dump`でパーティションの構成を`p1-sda-dump`というファイルに保存しています。
+パーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールしたときにChromeOS Flexが動かなくなる原因になります。そのためここではChromeOS Flexインストール直後のパーティションテーブルのバックアップを保存します。次の例は`sfdisk --dump`でパーティションの構成を`p1-sda-dump`というファイルに保存しています。
 
 ```
 root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda-dump
@@ -204,7 +204,8 @@ ID : Device        Start       End   Sectors   Size Type
 root@debian:/mnt# cp p1-sda-dump p2-sda-dump
 root@debian:/mnt# uuidgen
 f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0
-root@debian:/mnt# ```
+root@debian:/mnt#
+```
 
 次にテキストエディタを使って、コピーしたp2-sda-dumpを編集します。元のp1-sda-dumpと編集後のp2-sda-dumpの差分は次のようになります。
 
@@ -356,7 +357,7 @@ root@debian:/mnt# diff -U0 p2-sda-dump p3-sda-dump
 root@debian:/mnt#
 ```
 
-sda8は、元々の16MB分にsda12の64MB分のサイズを加えた80MB(163840ブロック)に変更しています。sda12はtypeとuuidはそのままで、sda13のstartとsizeの値に変更します。そしてsda13は不要なので単純に削除します。
+sda8は、元の16MBにsda12の64MBのサイズを加えた80MB(163840ブロック)に変更しています。sda12はtypeとuuidはそのままで、sda13のstartとsizeの値に変更します。そしてsda13は不要なので単純に削除します。
 
 以上の変更を正しく行えているのを確認したら、再びsfdiskコマンドでパーティションテーブルを書き換えます。
 
@@ -395,6 +396,7 @@ Device        Start      End  Sectors  Size Type
 Partition table entries are not in disk order.
 root@debian:/mnt# 
 ```
+この状態でsda8は、実際に使われるサイズよりパーティションサイズが大きいことになりますが、トラブルにはなりません。
 
 最初に保存したp1-sda-listと比較すると次のようになります。
 
@@ -469,9 +471,7 @@ Device        Start       End   Sectors  Size Type
 
 sda13とsda14がWindowsのインストールによって追加されたパーティションですが、さらにsda15も増えている場合があります。macOSの場合はsda13のみの1つです。
 
-sda12は事前に論理と物理の順番が一致するように対処してあったので変化はありませんが、sda1からsda11までが物理的な順にパーティションインデックスが変更されて綺麗に並んでしまっています。つまりWindowsやmacOSでは、新規のパーティションを追加するためにパーティションテーブルを書き換える際、パーティションの論理的順番を物理順に並べ替えてしまいChromeOS Flexが起動できなくなっているわけです。
-
-そこで、パーティションテーブルの並び順を元のChromeOS Flexの順番に戻せば、ChromeOS Flexが起動できるようになります。
+ChromeOS Flexが作成した1から12までのテーブルを見ると、sda12は事前に論理と物理の順番が一致するように対処してあったので変化はありませんが、sda1からsda11までがスタートセクタの小さい順つまりストレージ上の物理的な順にパーティションテーブルが並んでしまっています。どうやらWindowsやmacOSでは、新規のパーティションを追加するためにパーティションテーブルを書き換えると物理順に並べ替えてしまうようです。このままではChromeOS Flexが起動できないので、パーティションテーブルの並び順を元のChromeOS Flexの順番に戻してChromeOS Flexが起動できるよう修正します。
 
 まず`sfdisk --dump`で現状のパーティションテーブルをp4-sda-dumpに保存します。
 
@@ -481,7 +481,7 @@ root@debian:/mnt# sfdisk --dump /dev/sda > p4-sda-dump
 
 p4-sda-dumpを前に保存したp3-sda-dumpと比べると、パーティションの大きさやtype, uuidの情報は変わっていないことがわかります。そこで今回追加されたsda13, sda14(あるいはsda15まで、Macではsda13のみ)のパーティション情報をp3-sda-dumpに追加してストレージに反映すれば、ChromeOS Flexのパーティションテーブルを修復できます。
 
-修復するためのパーティションテーブルを作るのは、エディタを使うこともなく次のコマンドラインで完了します。
+修復するためのパーティションテーブルは、エディタを使うこともなく次のコマンドラインで作成できます。
 
 ```
 root@debian:/mnt# cp p3-sda-dump p5-sda-dump
@@ -495,7 +495,7 @@ root@debian:/mnt# diff -U1  p3-sda-dump p5-sda-dump
 +/dev/sda14 : start=    51122176, size=   183318528, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=2C6B3DFE-8DF4-4BF1-8C1F-01173A1042E1, name="Basic data partition"
 ```
 
- p3-sda-dumpと比較してsda13以降のパーティション情報が追加できていれば問題ありません。確認できたら修正したパーティションテーブルをストレージに反映します。
+2つめの`tail -n `のパラメータは、増えたパーティション数に合わせて1, 2, 3等を指定します。diffコマンドの結果でp3-sda-dumpと比較して、sda13以降のパーティション情報が追加できていれば問題ありません。確認できたら修正したパーティションテーブルをストレージに反映します。
 
 ```
 root@debian:/mnt# sfdisk /dev/sda < p5-sda-dump
