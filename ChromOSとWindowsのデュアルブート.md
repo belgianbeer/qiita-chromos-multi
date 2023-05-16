@@ -22,7 +22,7 @@ ChromeOS Flexとのマルチブート環境を作るのに必要なものは次�
 
 UEFIをサポートしていないPCでもChromeOS Flexの動作は問題ありませんが、本記事では他OSとのブートの切り替えにUEFIで用意されているブートセレクタを使うことを前提にしているため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacであれば問題ありません。Windows PC、Macのいずれを利用するにしても、ChromeOS Flexをインストールすると既存データは削除されてしまいますので、事前のバックアップは必須です。さらにWindows PCの場合は[回復ドライブ](https://support.microsoft.com/ja-jp/windows/%E5%9B%9E%E5%BE%A9%E3%83%89%E3%83%A9%E3%82%A4%E3%83%96%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-abb4691b-5324-6d4a-8766-73fab304c246)を作成しておくことをお勧めします。
 
-また対象PCでChromeOS FLexが正常に動作することを事前に確認しておく必要があります。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")に該当していれば文句なしですが、そうでない場合は[ChromeOS FlexのUSBインストーラ](https://support.google.com/chromeosflex/answer/11541904)を用意したあとに、それを使って動作確認を行うのが良いでしょう。
+また対象PCでChromeOS FLexが正常に動作することを事前に確認しておく必要があります。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")であれば安心ですが、そうでない場合は[ChromeOS FlexのUSBインストーラ](https://support.google.com/chromeosflex/answer/11541904)を使って、インストール用USBメモリだけでの動作確認を行うのが良いでしょう。
 
 WindowsやmacOSのインストーラは、それぞれ「[Windows 10 のダウンロード](https://www.microsoft.com/ja-JP/software-download/windows10)」、「[Windows 11 をダウンロードする](https://www.microsoft.com/ja-jp/software-download/windows11)」、「[macOS の起動可能なインストーラを作成する](https://support.apple.com/ja-jp/HT201372)」を参照して、必要なものを用意します。
 
@@ -32,19 +32,22 @@ WindowsやmacOSのインストーラは、それぞれ「[Windows 10 のダウ�
 
 ## ChromeOS Flexのインストール
 
-最初にChromeOS Flexをインストールするのですが、インストール前にBIOSの設定を確認します。少し古いPCではUEFIに対応したBIOSであってもUEFIでの起動が無効になっていることがあるので、必ず確認してください。Macの場合は事前に設定することはありません。
+最初にChromeOS Flexをインストールします。インストール前に行うことは、前述のように既存データのバックアップを行うことのほかに、Windows PCの場合はBIOSの設定を確認します。少し古いPCではUEFIに対応したBIOSであってもUEFIでの起動が無効になっていることがあるので、必ず確認してください。Macの場合は事前に設定することはありません。
 
-ChromOS Flexのインストールに関しては、USBインストーラを作成して起動し、メニューにしたがって順に操作するだけなので難しいところは無いでしょう。Googleも[ChromOS Flexインストールガイド](https://support.google.com/chromeosflex/answer/11552529)を用意していますし、検索すればインストールとレビューの記事が多数見つかります。
+ChromOS Flexのインストールに関しては、USBインストーラを作成して起動し、メニューにしたがって順に操作するだけなので難しいところは無いでしょう。Googleも[ChromOS Flexインストールガイド](https://support.google.com/chromeosflex/answer/11552529)を用意していますし、検索すればインストールとレビューの記事や動画が多数見つかります。
 
 通常であればインストール後に起動してアカウント設定等を行うのですが、設定してもこの後の作業で消去されてしまい改めて設定することになります。とは言えある程度のことを試しておくのも良いでしょう。
 
-## ストレージの空き領域の確保
+## ChromeOS Flexインストール後のストレージの空き領域の確保
 
+最初のところで書いたようにChromeOS FLexをインストールすると、内蔵ストレージの全領域がChromeOS Flex用に割り当てられてしまうので、ここではChromeOS Flexの使用領域を減らしてWindowsやmacOS用のストレージ領域を確保します。
 ### Devian Liveの起動
 
-ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUSBメモリで起動します。aptでパッケージを追加するため、起動前にLANケーブルを接続してPCがインターネットにアクセスできるようにしておく必要があります。起動するとシェルが立ち上がりますが、少し古いバージョンのDebian Liveのイメージを使った場合はログインプロンプトになることがあります。そのときはユーザー名に「user」パスワードに「live」を指定してログインします。
+ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUSBメモリで起動します。aptコマンドを使ってパッケージを追加するため、起動前にLANケーブルを接続してPCがインターネットにアクセスできるようにしておく必要があります。
 
-起動後に記録用のUSBメモリをPCに接続します。多くの場合Debian環境下でのストレージデバイスの割り当ては次のようになると思います。
+起動するとシェルが立ち上がりますが、少し古いバージョンのDebian Liveのイメージを使った場合はログインプロンプトになることがあります。その場合はユーザー名に「user」パスワードに「live」を指定してログインします。
+
+起動後に記録用のUSBメモリをPCに接続します。この状態では内蔵ストレージ、Debian LiveのUSBメモリ、記録用のUSBメモリの3個のストレージが接続された状態になりますが、多くの場合Debian環境下でのストレージデバイスの割り当ては次のようになると思います。
 
 <table>
   <caption>ストレージとデバイス名の対応</caption>
@@ -64,7 +67,7 @@ ChromeOS Flexのインストールが終わったら、今度はDebian LiveのUS
   </tr>
 </table>
 
-PC側のストレージの構成によっては違う割り当てになることもあるので、実際のストレージとデバイス名の割り当てを正しく把握してください。以降はこの割り当てを前提に説明しますので、もしデバイスの割り当てが違う場合は適宜注意して読み替えてください。
+PC側のストレージの構成によっては違う割り当てになることもあるので、実際のストレージとデバイス名の割り当てを正しく確認してください。以降はこの割り当てを前提に説明しますので、もしデバイスの割り当てが違う場合は注意して適宜読み替えてください。
 
 ### Debian Liveでの事前準備
 
@@ -125,11 +128,11 @@ Partition table entries are not in disk order.
 root@debian:/mnt#
 ```
 
-パーティションテーブルを見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションが12個もあり、更にパーティションテーブルの順番(/dev/sdaXのXで示す数字がパーティションテーブルの順番、つまり論理的順番)とそこで指定されるストレージ上の物理的順番が一致していません。通常パーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`等で見ればスタートセクタの値は小さいものから順に並びます。しかしどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
+パーティションテーブルを見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションが12個もあり、更にパーティションテーブルの順番(/dev/sdaXのXで示す数字がパーティションテーブルのインデックス、つまり論理的順番)とそこで指定されるストレージ上の物理的順番が一致していません。通常パーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`等で見ればスタートセクタの値は小さいものから順に並びます。しかしどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
 
 ### ChromeOS Flexのパーティションテーブルのバックアップ
 
-パーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールしたときにChromeOS Flexのパーティションテーブルが破される原因です。壊された場合に備え、この段階でChromeOS Flexインストール直後のパーティションテーブルのバックアップを保存します。次の例は`sfdisk --dump`でパーティションテーブルを`p1-sda-dump`というファイルに保存しています。
+パーティションの物理と論理の順番が一致していないことが、この後WindowsやmacOSをインストールしたときにChromeOS Flexのパーティションテーブルが壊れる原因です。壊れた場合に備え、この段階でChromeOS Flexインストール直後のパーティションテーブルのバックアップを保存します。次の例は`sfdisk --dump`でパーティションテーブルを`p1-sda-dump`というファイルに保存しています。
 
 ```
 root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda-dump
