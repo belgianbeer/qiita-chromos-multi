@@ -362,6 +362,8 @@ root@debian:/mnt#
 
 /dev/sda8は、元の16MBに/dev/sda12の64MBのサイズを加えた80MB(163840ブロック)に変更しています。/dev/sda12はtypeとuuidはそのままで、/dev/sda13のstartとsizeの値に変更します。そして/dev/sda13は不要なので単純に削除します。
 
+なおMacの場合は/dev/sda13を削除せず、nameを`"Customer"`、typeにAPFSを示すGUIDである`7C3457EF-0000-11AA-AA11-00306543ECAC`に変更し、ストレージの残りの部分をすべて割り当てます。macOSインストールの際は、ここで用意した/dev/sda13のパーティションをAPFSでフォーマットして利用します。
+
 以上の変更を正しく行えているのを確認したら、再びsfdiskコマンドでパーティションテーブルを書き換えます。
 
 ```
@@ -399,7 +401,7 @@ Device        Start      End  Sectors  Size Type
 Partition table entries are not in disk order.
 root@debian:/mnt# 
 ```
-この状態でsda8は、実際に使われるサイズよりパーティションサイズが大きいことになりますが問題ありません。
+この状態でsda8は、実際に使われている領域よりパーティションサイズが大きいことになりますが害はありません。
 
 最初に保存したp1-sda-listと比較すると次のようになります。
 
