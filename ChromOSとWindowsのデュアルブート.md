@@ -215,7 +215,7 @@ root@debian:/mnt#
 ```
 root@debian:/mnt# vi p2-sda-dump
 .....(省略).....
-root@debian:/mnt# diff -u p1-sda-dump p2-sda-dump
+root@debian:/mnt# diff -U1 p1-sda-dump p2-sda-dump
 --- p1-sda-dump 2023-04-08 22:51:03.041333000 +0900
 +++ p2-sda-dump 2023-04-08 22:51:03.042949000 +0900
 @@ -8,3 +8,3 @@
@@ -291,6 +291,7 @@ Allocating group tables: done
 Writing inode tables: done
 Creating journal (32768 blocks): done
 Writing superblocks and filesystem accounting information: done
+
 root@debian:/mnt#
 ```
 
