@@ -363,7 +363,7 @@ root@debian:/mnt#
 
 /dev/sda8は、元の16MBに/dev/sda12の64MBのサイズを加えた80MB(163840ブロック)に変更しています。/dev/sda12はtypeとuuidはそのままで、/dev/sda13のstartとsizeの値に変更します。そして/dev/sda13は不要なので単純に削除します。
 
-なおMacの場合は/dev/sda13を削除せず、nameを`"Customer"`、typeにAPFSを示すGUIDである`7C3457EF-0000-11AA-AA11-00306543ECAC`に変更し、ストレージの残りの部分をすべて割り当てます。macOSインストールの際は、ここで用意した/dev/sda13のパーティションをAPFSでフォーマットして利用します。
+なおMacの場合は/dev/sda13を削除せず、nameを`"Customer"`、typeをAPFSのGUIDである`7C3457EF-0000-11AA-AA11-00306543ECAC`に変更し、ストレージの適量(例えば50GB程度)割り当てます。macOSインストール時にAPFSで/dev/sda13のパーティションをフォーマットする必要がありますが、フォーマットとともに/dev/sda13は残りの容量全てを含むサイズに拡張されます。
 
 以上の変更を正しく行えているのを確認したら、再びsfdiskコマンドでパーティションテーブルを書き換えます。
 
