@@ -18,3 +18,4 @@ sector-size: 512
 /dev/sda10 : start=          68, size=           1, type=2E0A753D-9E48-43B0-8337-B15192CB1B5E, uuid=D337D190-F368-1A49-9C06-83B5B8624DF3, name="reserved"
 /dev/sda11 : start=          64, size=           1, type=CAB6E88E-ABF3-4102-A07A-D4BB9BE3C1D3, uuid=077FBBB3-D910-3448-B906-B144F30CFB49, name="RWFW"
 /dev/sda12 : start=    84119552, size=      524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=55301CD2-FFCF-9A4C-85F0-E55517BB2C24, name="EFI-SYSTEM", attrs="LegacyBIOSBootable"
+/dev/sda13 : start=    84643840, size=   536870912, type=7C3457EF-0000-11AA-AA11-00306543ECAC, uuid=0ff6e04f-f56f-4cb4-af87-655f4f78eaeb, name="Customer"
