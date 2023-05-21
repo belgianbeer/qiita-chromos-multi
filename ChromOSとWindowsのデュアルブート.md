@@ -426,7 +426,7 @@ root@debian:/mnt# diff -U0 --ignore-space-change p1-sda-list p3-sda-list
 root@debian:/mnt# poweroff
 ```
 
-この後PCの電源を入れると、ChromeOS Flexの起動を確認できます。もし起動しなかった場合はどこかの手順に誤りがあったことになりますので、ChromeOS Flexのインストールからやり直す羽目になるかもしれません。
+この後PCの電源を入れるとChromeOS Flexの起動を確認できます。もし起動しない場合は、今までの手順を見直します。Debian Liveを使って修復するか、またはChromeOS Flexのインストールからやり直すことになるかもしれません。
 
 ## WindowsまたはmacOSのインストール
 
