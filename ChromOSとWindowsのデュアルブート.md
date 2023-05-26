@@ -18,7 +18,7 @@ ChromeOS Flexとのマルチブート環境を作るのに必要なものは次�
 1. Debian Liveの起動用USBメモリ(2GB以上)
 1. 記録用のUSBメモリ(100KB程度の空きがあれば十分)
 
-UEFIをサポートしていないPCでもChromeOS Flexの動作は問題ありませんが、他OSとのブートの切り替えにUEFIで用意されているブートセレクタを使うことを前提にしているため、GPT(Guid Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacの場合は問題ありません。Windows PC、Macのいずれを利用するにしても、ChromeOS Flexをインストールすると既存データは削除されてしまいますので、事前のバックアップは必須です。さらにWindows PCの場合は[回復ドライブ](https://support.microsoft.com/ja-jp/windows/%E5%9B%9E%E5%BE%A9%E3%83%89%E3%83%A9%E3%82%A4%E3%83%96%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-abb4691b-5324-6d4a-8766-73fab304c246)を作成しておくことをお勧めします。
+UEFIをサポートしていないPCでもChromeOS Flexの動作は問題ありませんが、他OSとのブートの切り替えにUEFIで用意されているブートセレクタを使うことを前提にしているため、GPT(GUID Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacの場合は問題ありません。Windows PC、Macのいずれを利用するにしても、ChromeOS Flexをインストールすると既存データは削除されてしまいますので、事前のバックアップは必須です。さらにWindows PCの場合は[回復ドライブ](https://support.microsoft.com/ja-jp/windows/%E5%9B%9E%E5%BE%A9%E3%83%89%E3%83%A9%E3%82%A4%E3%83%96%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-abb4691b-5324-6d4a-8766-73fab304c246)を作成しておくことをお勧めします。
 
 また、対象のPCでChromeOS FLexが正常に動作することを事前に確認しておく必要があります。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")であれば安心ですが、そうでない場合は[ChromeOS FlexのUSBインストーラ](https://support.google.com/chromeosflex/answer/11541904)を使って、インストール用USBメモリだけでの動作確認を行うのが良いでしょう。
 
