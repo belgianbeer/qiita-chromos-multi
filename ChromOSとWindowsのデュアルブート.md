@@ -18,19 +18,19 @@ ChromeOS Flexとのマルチブート環境を作るのに必要なものは次�
 1. Debian Liveの起動用USBメモリ(2GB以上)
 1. 記録用のUSBメモリ(100KB程度の空きがあれば十分)
 
-UEFIをサポートしていないPCでもChromeOS Flexの動作は問題ありませんが、他OSとのブートの切り替えにUEFIで用意されているブートセレクタを使うことを前提にしているため、GPT(GUID Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacの場合は問題ありません。Windows PC、Macのいずれを利用するにしても、ChromeOS Flexをインストールすると既存データは削除されてしまいますので、事前のバックアップは必須です。さらにWindows PCの場合は[回復ドライブ](https://support.microsoft.com/ja-jp/windows/%E5%9B%9E%E5%BE%A9%E3%83%89%E3%83%A9%E3%82%A4%E3%83%96%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-abb4691b-5324-6d4a-8766-73fab304c246)を作成しておくことをお勧めします。
+UEFIをサポートしていないPCでもChromeOS Flexの動作は問題ありませんが、他OSとのブートの切り替えにUEFIで用意されているブートセレクタを使うことを前提にしているため、GPT(GUID Partition Table)を扱えるUEFI対応のPCが必須となります。Intel CPUのMacはUEFIをサポートしているので問題ありません。Windows PC、Macのいずれを利用するにしても、ChromeOS Flexをインストールすると既存データは削除されてしまいますので、事前のバックアップは必須です。さらにWindows PCの場合は[回復ドライブ](https://support.microsoft.com/ja-jp/windows/%E5%9B%9E%E5%BE%A9%E3%83%89%E3%83%A9%E3%82%A4%E3%83%96%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-abb4691b-5324-6d4a-8766-73fab304c246)を作成し、最悪の場合に出荷時の設定に戻せるよう準備しておくことをお勧めします。
 
 また、対象のPCでChromeOS FLexが正常に動作することを事前に確認しておく必要があります。[ChromeOS Flexの認定モデル](https://support.google.com/chromeosflex/answer/11513094 "認定モデルリスト")であれば安心ですが、そうでない場合は[ChromeOS FlexのUSBインストーラ](https://support.google.com/chromeosflex/answer/11541904)を使って、インストール用USBメモリだけでの動作確認を行うのが良いでしょう。
 
 WindowsやmacOSのインストール用のUSBメモリは、それぞれ「[Windows 10 のダウンロード](https://www.microsoft.com/ja-JP/software-download/windows10)」、「[Windows 11 をダウンロードする](https://www.microsoft.com/ja-jp/software-download/windows11)」、「[macOS の起動可能なインストーラを作成する](https://support.apple.com/ja-jp/HT201372)」を参照して、必要なものを用意します。
 
-Debianが配布している[Debian Liveの起動用USBメモリ](https://www.debian.org/CD/live/index.ja.html)は、Linuxのsfdiskコマンドを使ってパーティションテーブルを編集する際に使用します。Debian Liveには様々なイメージが用意されていますが、デスクトップ環境は不要なのでサイズが小さいstandardイメージ(`debian-live-11.7.0-amd64-standard.iso` 2023年5月現在)で問題ありません。Linuxの起動用USBメモリでシェルが起動できてsfdiskとエディタ等が利用できるのであれば、Debian Liveでなくてもかまいません。
+Debianが配布している[Debian Liveの起動用USBメモリ](https://www.debian.org/CD/live/index.ja.html)は、Linuxのsfdiskコマンドを使ってパーティションテーブルを編集する際に使用します。Debian Liveには様々なイメージが用意されていますが、sfdisk等を使うだけであればデスクトップ環境は不要なのでサイズが小さいstandard版(`debian-live-11.7.0-amd64-standard.iso` 2023年5月現在)で問題ありません。Linuxの起動用USBメモリでシェルが起動できてsfdiskとエディタ等が利用できるのであれば、Debian Liveでなくてもかまいません。
 
 この他に記録用のUSBメモリも必要になります。Debian LiveのUSBメモリに記録できれば用が足りるのですがファイルシステムの関係で書き込むことができません。パーティションテーブルのテキストファイルを数個保存するだけなので、手頃なものを用意してください。
 
 ## ChromeOS Flexのインストール
 
-最初にChromeOS Flexをインストールします。インストール前に行うことは、前述のように既存データのバックアップやインストール用のUSBメモリを作ることの他に、Windows PCの場合はBIOSの設定でUEFIが有効になっているかどうかを確認します。少し古いPCではUEFI対応のBIOSであってもUEFIでの起動が無効になっていることがあるので、必ずUEFIを有効に設定します。Macの場合は事前に特別な作業はありません。
+最初にChromeOS Flexをインストールします。インストール前に行うことは、前述のように既存データのバックアップやインストール用のUSBメモリを作ることの他に、Windows PCの場合はBIOSの設定でUEFIが有効になっているかどうかを確認します。少し古いPCではUEFI対応のBIOSであってもUEFIの起動が無効や優先度が低くなっていることがあるので、必ずUEFIを優先する設定に変更します。Macの場合は事前に特別な作業はありません。
 
 ChromeOS Flexのインストールに関しては、USBインストーラを作成して起動し、メニューにしたがって順に操作すればよいので難しいところは無いでしょう。Googleも[ChromeOS Flexインストールガイド](https://support.google.com/chromeosflex/answer/11552529)を用意していますし、検索すればインストールの記事や動画が多数見つかります。
 
@@ -38,11 +38,11 @@ ChromeOS Flexのインストールに関しては、USBインストーラを作�
 
 ## ChromeOS Flexインストール後のストレージの空き領域の確保
 
-はじめのところで書いたように、この時点ではChromeOS FLexのインストールによって内蔵ストレージの全領域がChromeOS Flex用に割り当てられています。このままでは他のOSをインストールできませんから、Debian Liveの環境を使ってパーティションテーブルを編集し、ChromeOS Flexの使用領域を減らしてWindowsやmacOS用の空き領域を確保します。
+すでに説明したように、この時点ではChromeOS FLexのインストールによって内蔵ストレージの全領域がChromeOS Flex用に割り当てられています。このままでは他のOSをインストールできませんから、Debian Liveの環境を使ってパーティションテーブルを編集し、ChromeOS Flexの使用領域を減らしてWindowsやmacOS用の空き領域を確保します。
 
 ### Devian Liveの起動
 
-パーティションテーブルの編集ではaptでパッケージを追加するため、PCがインターネットにアクセスできるようLANケーブルを接続してから、Debian LiveのUSBメモリを接続して起動します。Wi-F軽油でもインターネット接続できると思いますが筆者は試したことがありません
+パーティションテーブルの編集ではaptでパッケージを追加するため、PCがインターネットにアクセスできるようLANケーブルを接続してから、Debian LiveのUSBメモリを接続して起動します。Wi-F軽油でもインターネット接続できると思いますが筆者は試したことがありません。
 
 Debian Liveが起動するとシェルのコマンドラインが立ち上がりますが、少し古いバージョンのDebian Liveのイメージを使った場合はログインプロンプトになることがあります。その場合はユーザー名に「user」パスワードに「live」を指定してログインします。
 
@@ -87,7 +87,7 @@ root@debian:~# apt install dosfstools
 root@debian:~# 
 ```
 
-記録用のUSBメモリをマウントして、マウントポイントにcdします。これでUSBメモリにコマンドの出力結果などを残せるようになります。
+記録用のUSBメモリを/mntにマウントして、そこにcdします。これでUSBメモリにコマンドの出力結果などを残せるようになります。
 
 ```
 root@debian:~# mount /dev/sdc1 /mnt
@@ -127,7 +127,7 @@ Partition table entries are not in disk order.
 root@debian:/mnt#
 ```
 
-ここで、Start, Endの各数字はストレージのLBA(Logical Block Addressing)、Sectorsはそのブロック数を示していて、1ブロックは論理セクタサイズの512バイトとなります。
+ここで、Start、Endの各数字はストレージのLBA(Logical Block Addressing)、Sectorsはブロック数(セクタ数)を示していて、1ブロックは512バイトです。/dev/sda2を例にすると、LBAの始まりが69、最後がLBAで32836、ブロック数は32768(=32836-69+1)となります。ブロック数が32768ですから32768×512÷1024÷1024=16となり容量は16MBとなります。 
 
 パーティションテーブルを見たことのある人なら違和感を覚えると思いますが、ChromeOS Flexではパーティションが12個もあり、更にパーティションテーブルのインデックス(/dev/sdaXのXで示す数字がパーティションテーブルのインデックス)とストレージ上の物理的順番が一致していません。通常パーティションを作成する場合先頭から順に割り当てるので、`sfdisk --list`等で見ればスタートセクタの値は小さいものから順に並びます。しかしどういうわけかChromeOS Flexではこのようにバラバラの順番でパーティションが並んでいます。そのため`Partition table entries are not in disk order.`というメッセージも表示されています。
 
@@ -160,7 +160,7 @@ sector-size: 512
 root@debian:/mnt# 
 ```
 
-このリストからわかるようにGPTの各パーティションエントリには、先頭のLBA、サイズ(実際に記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、パーティション固有のUUID、パーティションの名前、アトリビュートから構成されています。なおGPTでは最大128までのパーティションを利用できます。
+このリストからわかるようにGPTの各パーティションエントリには、先頭のLBA、サイズ(記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、パーティション固有のUUID、パーティションの名前、アトリビュートから構成されています。なおGPTでは最大128までのパーティションを利用できます。
 
 ### WindowsやmacOS用の空き領域の確保
 
@@ -182,15 +182,15 @@ ID : Device        Start       End   Sectors   Size Type
 12 : /dev/sda1  17010688 234441599 217430912 103.7G Linux filesystem
 ```
 
-現状ではストレージの全領域がChromeOS Flexに割り当てられているので、このままでは他のOSをインストールするための空き領域がありません。そこでポイントとなるのが12番目にあるLinux filesystemのパーティションです。このパーティションはChromeOS Flexのユーザーデータ用で、物理的には最後ですがパーティションインデックスは/dev/sda1が示すように最初に割り当てられています(以降の説明では/dev/sdaXの/dev/は省略します)。
+現時点ではストレージの全領域がChromeOS Flexに割り当てられているので、このままでは他のOSをインストールするための空き領域がありません。そこでポイントとなるのがこの中で最大の領域を使用している12番目にあるLinux filesystemのパーティションです。このパーティションはChromeOS Flexのユーザーデータ用で、物理的には最後ですがパーティションインデックスは/dev/sda1が示すように最初に割り当てられています(以降の説明では/dev/sdaXの/dev/は省略します)。
 
 実は**ユーザーデータ用のパーティションのファイルシステムはEXT4で、サイズを変更して作り直しても問題なくChoromOS Flexが立ち上がることを確認しています。そこでこの領域を縮小することで他のOS用のスペースを確保します**。もちろん縮小して作り直すことで書き込み済みのデータを失いますが、この時点では保存しなければならないようなデータは無いので問題ないわけです。これが最初に書いた裏技ということになります。
 
 ## EFIシステムパーティションの変更
 
-### EFIシステムパーティションの変更が必要なわけ
-
 次にポイントとなるのがIDで9にあるEFIシステムパーティション(ESP)で、ESPにはOSのブートローダーやカーネルなどが保存されます。ChromeOS FlexではESPに64Mバイト割り当てられていて物理的には9番目なのにデバイス名のsda12が示すようにパーティションインデックスは12で一番最後になります。
+
+### ChromeOS FlexのESPの問題点
 
 テストした結果ChromeOS FlexのESPの設定には二つの問題がありました。一つ目がパーティションサイズで、64MBではChromeOS Flexだけなら問題ないようですがWindowsとのマルチブートを行おうとすると不足気味です。実際Windowsのブートローダーと必要なファイルをインストールしてみると残りは2.7MB程度になりました。もし今後OSのアップデート等によってESPに保存するファイルが増えたり何かのファイルサイズが大きくなったりすると容量不足に陥る可能性があるため、将来に備えて容量を増やす必要があります。
 
@@ -234,7 +234,7 @@ sda1の変更は単純にパーティションサイズを小さくするだけ�
 
 次にESPを置き換えるためのFATパーティション(ESPのファイルシステムはFAT16やFAT32)を一旦sda13に用意します。sda13のstartは物理的にはsda1の後になるのでsda1のstartとsizeを加えた 17010688 + 33554432 = 50565120 となります。ESPの容量は最低でも100MB程度は欲しいので余裕を見て256MBを設定しています。sda13のパーティションのtypeにはWindowsの一般的なデータパーティションを示す`EBD0A0A2-B9E5-4433-87C0-68B6B72699C7`を指定し、パーティションUUIDには先ほど用意した`f2b1b3fc-81da-4ef8-9494-32dd9c0b20a0`を設定します。パーティションの名前は無くても構わないのですが、一旦"DOS"としてあります。
 
-新規にパーティションを用意する場合、startとsizeは必ず8の倍数になるよう設定します。現在のストレージでは物理セクタサイズが4096バイトを採用しているものが一般的であるため、ブロックサイズの512で割った値が8というわけです。8の倍数にそろっていないと物理セクタとアクセスするセクタが合わないことになって、パフォーマンス面でペナルティが発生するので注意します。ちなみに本記事の例で使用しているSSDは少々古いものであるため物理セクタサイズは512バイトです。
+新規にパーティションを用意する場合、startとsizeは必ず8の倍数になるよう設定します。古いストレージではセクタサイズが512バイトでしたが、現在のストレージではセクタサイズは4096バイトが一般的で、従来と互換性をもたせるため512バイト単位でアクセスできるようになっています。これを区別するためにストレージ上のセクタを物理セクタ、アクセス可能なセクタを論理セクタと呼んでいて、物理セクタサイズを論理セクタサイズで割った値(つまり4096÷512)が8というわけです。8の倍数にそろっていないと物理セクタとアクセスするセクタの境界が合わないことでパフォーマンスに悪影響が発生します。ちなみに本記事の例で使用しているSSDは少々古いものであるため物理セクタは512バイトです。
 
 p2-sda-dumpの変更内容が確認できたら、sfdiskコマンドを使ってストレージに書き込みます。
 
@@ -316,20 +316,7 @@ root@debian:/mnt# (cd /mnt/efi ; tar cf - * ) | (cd /mnt/dos ; tar xvf -)
 efi/
 efi/boot/
 efi/boot/bootx64.efi
-efi/boot/bootia32.efi
-efi/boot/grubx64.efi
-efi/boot/grubia32.efi
-efi/boot/grub.cfg
-syslinux/
-syslinux/syslinux.cfg
-syslinux/default.cfg
-syslinux/usb.A.cfg
-syslinux/root.A.cfg
-syslinux/root.B.cfg
-syslinux/README
-syslinux/vmlinuz.A
-syslinux/vmlinuz.B
-syslinux/ldlinux.sys
+.....(省略).....
 syslinux/ldlinux.c32
 root@debian:/mnt# umount /mnt/dos
 root@debian:/mnt# umount /mnt/efi
@@ -362,7 +349,7 @@ root@debian:/mnt# diff -U0 p2-sda-dump p3-sda-dump
 root@debian:/mnt#
 ```
 
-sda8は、元の16MBにsda12の64MBのサイズを加えた80MB(163840ブロック)に変更しています。sda12はtypeとuuidはそのままで、sda13のstartとsizeの値に変更します。そしてsda13は不要なので単純に削除します。
+sda8は、元の16MBにsda12の64MBのサイズを加えた80MB(163840セクタ)に変更しています。sda12はtypeとuuidはそのままで、sda13のstartとsizeの値に変更します。そしてsda13は不要なので単純に削除します。
 
 Macの場合はsda13を削除せず、nameを`"Customer"`、typeをAPFSのGUIDである`7C3457EF-0000-11AA-AA11-00306543ECAC`に変更し、startをsda12の次(sda12のsizeとstartを加えた値)に指定し、sizeには50GB程度(残りの容量に収まる範囲)割り当てます。macOSのインストール時にAPFSでsda13のパーティションをフォーマットする必要がありますが、フォーマットとともにsda13は残容量全てを含むサイズに拡張されるので厳密なサイズを気にする必要はありません。。
 
