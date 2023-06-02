@@ -24,7 +24,7 @@ UEFIをサポートしていないPCでもChromeOS Flexの動作は問題あり�
 
 WindowsやmacOSのインストール用のUSBメモリは、それぞれ「[Windows 10 のダウンロード](https://www.microsoft.com/ja-JP/software-download/windows10)」、「[Windows 11 をダウンロードする](https://www.microsoft.com/ja-jp/software-download/windows11)」、「[macOS の起動可能なインストーラを作成する](https://support.apple.com/ja-jp/HT201372)」を参照して、必要なものを用意します。
 
-Debianが配布している[Debian Liveの起動用USBメモリ](https://www.debian.org/CD/live/index.ja.html)は、Linuxのsfdiskコマンドを使ってパーティションテーブルを編集する際に使用します。Debian Liveには様々なイメージが用意されていますが、sfdisk等を使うだけであればデスクトップ環境は不要なのでサイズが小さいstandard版(`debian-live-11.7.0-amd64-standard.iso` 2023年5月現在)で問題ありません。Linuxの起動用USBメモリでシェルが起動できてsfdiskとエディタ等が利用できるのであれば、Debian Liveでなくてもかまいません。
+Debianが配布している[Debian Liveの起動用USBメモリ](https://www.debian.org/CD/live/index.ja.html)は、Linuxのsfdiskコマンドを使ってパーティションテーブルを編集する際に使用します。Debian Liveには様々なイメージが用意されていますが、今回の用途ではデスクトップ環境は不要なのでサイズの小さいstandard版(`debian-live-11.7.0-amd64-standard.iso` 2023年5月現在)で問題ありません。Linuxの起動用USBメモリでシェルが起動できてsfdiskとエディタ等が利用できるのであれば、Debian Liveでなくてもかまいません。
 
 この他に記録用のUSBメモリも必要になります。Debian LiveのUSBメモリに記録できれば用が足りるのですがファイルシステムの関係で書き込むことができません。パーティションテーブルのテキストファイルを数個保存するだけなので、手頃なものを用意してください。
 
@@ -162,7 +162,7 @@ sector-size: 512
 root@debian:/mnt# 
 ```
 
-このリストからわかるようにGPTの各パーティションエントリには、先頭のLBA、サイズ(記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、パーティション固有のUUID、パーティションの名前、アトリビュートから構成されています。なおGPTでは最大128までのパーティションを利用できます。
+このリストからわかるようにGPTの各パーティションエントリには、先頭のLBA、サイズ(記録されているのはパーティションの最後のLBA)、パーティションのタイプを示すUUID(GUID)、パーティション固有のUUID、パーティションの名前、アトリビュートから構成されています。なおGPTでは最大で128個のパーティションを扱えます。
 
 ### WindowsやmacOS用の空き領域の確保
 
