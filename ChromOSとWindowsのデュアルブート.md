@@ -536,4 +536,4 @@ Windows Registry Editor Version 5.00
 
 筆者の場合、以前にChromeOS Flexを利用したのはかなり古いPCであったためパフォーマンス面ではあまり快適な環境ではありませんでした。今回はWindowsで使っても実用的なパフォーマンスがあるPCなのでChromeOS Flexも快適に利用でき、余計なアプリが動かないこともあってか動作は軽く、起動や終了の速さも特筆ものでした。
 
-ChromeOS Flexは、WindowsやmacOSが快適に使えるPCでわざわざを使うメリットはあまり無さそうですが、CPUはそこそこなのにメモリが少ない場合(4GB程度)には最適な選択肢かもしれません。
+WindowsやmacOSが快適に使えるPCでわざわざChromeOS Flexを使うメリットはあまり無さそうですが、CPUはそこそこなのにメモリが少ない場合(4GB程度)にChromeOS Flexを選ぶのは最適な選択肢かもしれません。
