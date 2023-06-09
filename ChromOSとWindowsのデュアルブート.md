@@ -505,9 +505,21 @@ root@debian:/mnt# sfdisk /dev/sda < p5-sda-dump
 
 実際にPCを起動してみましょう。
 
-Windows PCの場合は起動時にUEFI BIOSのブートセレクタを選ぶと、こんな感じで「ChromeOF Flex」と「Windows Boot Manager」が選べると思います。なおこのPCではFreeBSDやDebian GNU/Linuxもインストールしてあり4種類のOSを利用できるようになっています。
+### Windows PCの場合
 
-Macの場合はOptionキーを押しながら起動すれば次のドライブの選択画面が表示されますが、このうち「EFI Boot」がChromeOS Flexとなります。起動OSを選ぶ時にControlキーを押しながらクリックすれば、次回からのデフォルトの起動OSを変更できます。
+Windows PCの場合は起動時にUEFI BIOSのブートセレクタを選ぶと、こんな感じで「ChromeOF Flex」と「Windows Boot Manager」が選べると思います。
+
+![boot-Windows.jpg](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/130638/8a6b8c32-21ca-5632-deab-57c1433a51dd.jpeg)
+
+このPCではFreeBSDやDebian GNU/Linuxもインストールしてあり4種類のOSを切り替えて利用できるようになっています。
+
+### Macの場合
+
+Macの場合はOptionキーを押しながら起動すれば次のドライブの選択画面が表示されますが、このうち「EFI Boot」がChromeOS Flexとなります。
+
+![boot-macOS.jpg](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/130638/d0f93100-bf58-ed64-5637-f0d3da7005e8.jpeg)
+
+起動OSを選ぶ時にControlキーを押しながらクリックすれば、次回からのデフォルトの起動OSを変更できます。
 
 ## ハードウェアクロックの扱いの違い
 
