@@ -135,7 +135,7 @@ root@debian:/mnt#
 
 ### ChromeOS Flexのパーティションテーブルのバックアップ
 
-パーティションのインデックスと物理的順番が一致していないことが、この後WindowsやmacOSをインストールしたときにChromeOS Flexのパーティションテーブルが壊れる原因です。壊れた場合に備え、この段階でChromeOS Flexインストール直後のパーティションテーブルのバックアップを保存します。次の例は`sfdisk --dump`でパーティションテーブルを`p1-sda-dump`というファイルに保存しています。
+パーティションのインデックスと物理的順番が一致していないことが、この後WindowsやmacOSをインストールしたときにChromeOS Flexのパーティションテーブルが壊れる原因です。この後パーティションテーブルを編集するため、ChromeOS Flexインストール直後のパーティションテーブルを保存します。次の例は`sfdisk --dump`でパーティションテーブルを`p1-sda-dump`というファイルに保存しています。
 
 ```
 root@debian:/mnt# sfdisk --dump /dev/sda | tee p1-sda-dump
